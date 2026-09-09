@@ -1,0 +1,161 @@
+/* ============================================================================
+   DESIGN 1ST — TOKENS. One file, one place to look.
+   Imported first by src/layouts/Layout.astro, ahead of chrome.css/article.css.
+
+   This replaced three parallel vocabularies that had drifted apart: chrome.css
+   declared --d1-*, the article page declared its own --ink/--body/--mut inline,
+   and Allan's brand-tokens.css declares --c-*. All three named the same colours
+   and disagreed on the values (ink was #111 / #191919 / #111111).
+
+   WHAT THIS FILE DOES NOT DO: change any rendered value. Consolidating the
+   *location* of the tokens is a refactor; consolidating the *values* is spec
+   step B3, a deliberate visual change that needs sign-off. So every drifting
+   token keeps its current value and carries its brand delta in a comment. The
+   migration, when approved, is one line per token — swap the literal for the
+   var(--brand-*) already sitting next to it. The DRIFT LEDGER at the bottom is
+   the full list.
+   ============================================================================ */
+
+:root {
+  /* ---- Brand canon -------------------------------------------------------
+     Source: Allan's brand-tokens.css (verified against design1st.com, Astra
+     theme, 2026-06-23). These are the target values. Nothing renders straight
+     from them yet except where a consumer below already matches. */
+  --brand-orange: #ff6600;
+  --brand-orange-deep: #d95000;
+  --brand-slate: #54565a;
+  --brand-ink: #111111;
+  --brand-body: #3a3a3a;
+  --brand-muted: #7a7a7a;
+  --brand-ui: #4b4f58;
+  --brand-hairline: #e4e4e4;
+  --brand-wash: #f5f5f5;
+  --brand-cool: #f2f5f7;
+  --brand-white: #ffffff;
+
+  /* ---- Type --------------------------------------------------------------
+     One family, both spellings, backed by the same variable woff2 declared in
+     chrome.css. "Switzer Variable" is what design1st.com asks for; "Switzer"
+     is what brand-tokens.css and the WP h2/h3 rules ask for. */
+  --d1-font: "Switzer Variable", "Switzer", sans-serif;
+
+  /* ---- Chrome (header / footer / modals) ---------------------------------
+     Measured off the live site with scripts/extract-tokens.mjs — see
+     artifacts/tokens-1440.json. These must keep matching design1st.com, so
+     they are NOT candidates for the brand migration; where they already equal
+     a brand value they alias it, and the rest are deliberate. */
+  --d1-grey: var(--brand-slate); /* header bg + footer bottom bar */
+  --d1-orange: var(--brand-orange);
+  --d1-ink: var(--brand-ink); /* footer column headings */
+  --d1-body: var(--brand-ui); /* body copy — the live site sets #4b4f58,
+                                 which is the brand's UI grey, not brand body.
+                                 A naming mismatch, not a drift. */
+  --d1-link: var(--brand-slate); /* footer nav links */
+  --d1-on-dark: var(--brand-white);
+  --d1-on-dark-dim: #f8f8f8; /* copyright line — no brand equivalent */
+  --d1-social: #69727d; /* social icons — no brand equivalent */
+
+  /* Content column: 1240px cap with 80px gutters puts content at x=180 on a
+     1440 viewport, which is where the live chrome sits. */
+  --d1-max: 1240px;
+  --d1-gutter: 80px;
+
+  /* ---- Article -----------------------------------------------------------
+     Consumed by .d1a in article.css. Six of these drift from brand canon; the
+     brand target is named on each line. Closing them is spec step B3. */
+  --art-orange: var(--brand-orange); /* on canon */
+  /* The orange that has to be READ. --art-orange is #FF6600, which measures
+     2.94:1 on white — fine as a fill or a rule, a 4.5:1 failure as text. This
+     is the same hue darkened to 5.50:1, and it is what link text and the
+     "Public tools" pill use. NOT a replacement for --art-orange, which stays
+     the brand fill; the two are deliberately separate, per the owner ruling
+     that --orange itself is not to be changed. The site-wide focus ring
+     (2.94:1, separate ticket) wants a token like this one too. */
+  --art-orange-ink: #b34700;
+  --art-ink: #191919; /* brand: #111111  (--brand-ink) */
+  --art-body: #2b2b2b; /* brand: #3a3a3a  (--brand-body) */
+  --art-muted: #6f6f6f; /* brand: #7a7a7a  (--brand-muted) */
+  --art-hairline: #e8e6e2; /* brand: #e4e4e4  (--brand-hairline) */
+  --art-card: #faf9f7; /* brand: #f5f5f5  (--brand-wash) */
+  --art-warn-bg: #fff7f2; /* brand: #f2f5f7  (--brand-cool) — note this one
+                             also flips warm to cool, so it is the most
+                             visible of the six. Check with Allan first. */
+
+  /* ---- Insights index kit ------------------------------------------------
+     Ported from the 2026-08-14 handoff pack (build/insights-kit.css). These
+     are additive: nothing above changes value, and only src/styles/insights.css
+     consumes them, so the articles and the chrome render exactly as before.
+
+     Where a kit token already equals brand canon it aliases it rather than
+     restating the hex, so the two cannot drift apart later. The three that do
+     NOT alias each carry the measurement that forced them. */
+  --c-orange: var(--brand-orange); /* FILL / illustration accent ONLY.
+                                      2.94:1 on white: fails AA at every text size. */
+  --c-orange-text: #c25000; /* 4.73:1 on white. Every orange TEXT, icon and focus
+                               ring uses this. ⚠ CANON DECISION PENDING (owner,
+                               2026-08-14): this adds a token to the brand.
+                               #B84A00 (5.23:1) is the alternative if 4.73 feels
+                               tight — a one-line change, nothing else moves. */
+  --c-orange-deep: var(--brand-orange-deep); /* 4.12:1 — also fails as text.
+                                                Hover/pressed on ORANGE FILLS only. */
+  --c-slate: var(--brand-slate);
+  --c-ink: var(--brand-ink);
+  --c-body: var(--brand-body);
+  --c-muted: #6e6e6e; /* NOT --brand-muted. #7a7a7a measures 4.29:1 on white and
+                         FAILS AA for normal text (threshold grey is #767676 at
+                         4.54:1). #6e6e6e = 5.10:1. Accessibility audit,
+                         2026-08-14. The brand token is left alone: retoning it
+                         site-wide is the drift-ledger migration, not this work. */
+  --c-field-line: #8a8a8a; /* 3.45:1 — form-control boundaries. A control needs
+                              3:1; --c-hairline is 1.27:1 and is for DIVIDERS. */
+  --c-hairline: var(--brand-hairline);
+  --c-wash: var(--brand-wash);
+  --c-white: var(--brand-white);
+
+  --fw-bold: 700;
+  --fw-xbold: 800;
+
+  --t-h1: 40px;
+  --t-h2: 32px;
+  --t-h3: 24px;
+  --t-h4: 20px;
+  --t-body: 17px;
+  --t-small: 14px;
+
+  --lh-tight: 1.1;
+  --lh-snug: 1.25;
+  --lh-body: 1.6;
+  --ls-tight: -0.02em;
+
+  --radius: 8px;
+
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+
+  --border-1: 1px solid var(--c-hairline);
+  --container: 1000px;
+  --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
+  --dur: 160ms;
+}
+
+/* ============================================================================
+   DRIFT LEDGER — everything still off brand canon, in one place.
+
+     token             renders   brand     delta
+     --art-ink         #191919   #111111   +8 lightness
+     --art-body        #2b2b2b   #3a3a3a   -15 lightness
+     --art-muted       #6f6f6f   #7a7a7a   -11 lightness
+     --art-hairline    #e8e6e2   #e4e4e4   warm vs neutral
+     --art-card        #faf9f7   #f5f5f5   warm vs neutral
+     --art-warn-bg     #fff7f2   #f2f5f7   WARM vs COOL — biggest visual jump
+
+   This is DIAGNOSIS finding #4 ("six values off-token, each small, jointly
+   'almost-brand'"). Nothing here is a bug on its own; the sum is the "not
+   quite our site" feel the diagnosis measured. Fix as one reviewed change,
+   not opportunistically.
+   ============================================================================ */

@@ -1,0 +1,137 @@
+---
+// /careers — the page. Rebuilt from the Elementor original, section for
+// section: hero, "How to Apply", the form, the photo grid.
+//
+// This file COMPOSES. Every colour, size and space lives in
+// src/styles/careers.css; if something here looks like it needs a hex, a
+// class is missing there.
+import Layout from "@/layouts/Layout.astro"
+import Icon from "@/components/ui/Icon.astro"
+import ApplyForm from "@/components/careers/ApplyForm.astro"
+import { withBase, CANONICAL, SITE_ORIGIN } from "@/lib/paths"
+import "@/styles/careers.css"
+
+// <title> and description are the WordPress page's, verbatim: this is a move,
+// not a rewrite, and the ranking surface should not change with the host.
+const TITLE = "Careers - Design 1st"
+const DESCRIPTION =
+  "Work alongside the industry's most innovative minds on high-impact projects that bring creative solutions to new products."
+
+// og:image stays on WordPress on purpose. It is the file every existing share
+// of this URL has cached, it lives under /wp-content (outside the Worker's
+// route, so WordPress keeps serving it), and JPEG is the safe format for link
+// previews where WebP still is not.
+const OG_IMAGE = `${SITE_ORIGIN}/wp-content/uploads/2023/02/design1st-team-with-waterot.jpg`
+
+const img = (name: string, w: number) => withBase(`/static/images/careers/${name}-${w}.webp`)
+
+// Captions are the live page's. Alt text is new — the originals had none.
+const GALLERY = [
+  { name: "gallery-01", caption: "Prototype Building and Testing", alt: "Two engineers assembling a large white prototype frame in the workshop" },
+  { name: "gallery-02", caption: "Manufacturing Partners in China", alt: "The Design 1st team with a manufacturing partner's staff outside their facility in Shenzhen" },
+  { name: "gallery-03", caption: "Engineering and Design Team", alt: "Two engineers in blue lab coats working at a bench with hand tools" },
+  { name: "gallery-04", caption: "Partnering with Leading Innovators", alt: "Four team members in the office holding a circuit board" },
+  { name: "gallery-05", caption: "VP's Give a Tour of the Offices", alt: "Two people pointing at the Design 1st conference room sign" },
+  { name: "gallery-06", caption: "Product Testing with the Waterotor Tech Team", alt: "The team standing behind a blue Waterotor turbine prototype in a field" },
+]
+---
+
+<Layout title={TITLE} description={DESCRIPTION} canonical={CANONICAL} ogImage={OG_IMAGE} ogType="website" wide>
+  <div class="d1-page cr">
+    <section class="cr-hero">
+      <div class="cr-wrap cr-hero__grid">
+        <div class="cr-hero__copy">
+          <nav class="cr-crumbs" aria-label="Breadcrumb">
+            <ol>
+              <li><a href={`${SITE_ORIGIN}/`}>Design 1st</a></li>
+              <li><span>About</span></li>
+              <li><span aria-current="page">Careers</span></li>
+            </ol>
+          </nav>
+
+          <div class="cr-clutch">
+            <img src={withBase("/chrome/clutch.svg")} width="80" height="24" alt="Clutch" />
+            <span class="cr-clutch__score">4.7</span>
+            <span class="cr-clutch__stars" role="img" aria-label="4.7 out of 5 stars">
+              {Array.from({ length: 5 }, () => <Icon name="star" />)}
+            </span>
+          </div>
+
+          <h1>Want to Work With Us?</h1>
+          <p class="cr-hero__lede">
+            Work alongside the industry’s most innovative minds on high-impact projects that bring creative solutions
+            to new products.
+          </p>
+          <a class="cr-cta" href="#how-to-apply">Submit Your Application</a>
+        </div>
+
+        {
+          /* The page's LCP image: eager, high priority, and sized so the frame
+             is reserved before the bytes land. 583x396 is the live frame at
+             1440; the 3:2 crop is what the 1050/600 rungs are cut to. */
+        }
+        <img
+          class="cr-hero__photo"
+          src={img("hero-team", 600)}
+          srcset={`${img("hero-team", 1050)} 1050w, ${img("hero-team", 600)} 600w`}
+          sizes="(min-width: 900px) 583px, 100vw"
+          width="583"
+          height="396"
+          alt="The Design 1st team waving outside the office"
+          fetchpriority="high"
+          decoding="async"
+        />
+      </div>
+    </section>
+
+    <section class="cr-how" id="how-to-apply">
+      <div class="cr-wrap cr-how__inner">
+        <h2>How to Apply</h2>
+        <p>
+          We hire talented and passionate professionals providing a supportive work environment that our employees
+          enhance, and our clients love. Our integrated team manages every step of our client’s product development
+          process, from concept through to electronics design, manufacturing setup, and production support.
+        </p>
+        <p>
+          If you’re an experienced product designer, engineer, embedded systems expert or simply passionate about
+          physical product design please get in touch. We will post open positions when available but if none show
+          you can still submit your job application request using the form below.
+        </p>
+        <p>We keep all job requests on file and review applications frequently.</p>
+      </div>
+    </section>
+
+    <section class="cr-apply" id="apply">
+      <div class="cr-wrap">
+        <ApplyForm />
+      </div>
+    </section>
+
+    <section class="cr-gallery">
+      <div class="cr-wrap">
+        <h2>The Design Team at Work and Play!</h2>
+        <ul class="cr-gallery__grid" role="list">
+          {
+            GALLERY.map((g) => (
+              <li>
+                <figure>
+                  <img
+                    src={img(g.name, 523)}
+                    srcset={`${img(g.name, 1046)} 1046w, ${img(g.name, 523)} 523w`}
+                    sizes="(min-width: 900px) 523px, 100vw"
+                    width="523"
+                    height="342"
+                    alt={g.alt}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <figcaption>{g.caption}</figcaption>
+                </figure>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </section>
+  </div>
+</Layout>

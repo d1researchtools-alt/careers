@@ -1,0 +1,598 @@
+/* ============================================================================
+   CAREERS PAGE. Tokens live in tokens.css; this file is components only.
+   Everything is scoped under .cr so nothing reaches the header or footer.
+
+   Measurements are the live Elementor page at 1440 (scripts in the insights
+   repo, same method as artifacts/layout-1440.json): 32/38 headings, 16px body
+   at 1.8, a 583x396 hero photo, a 582px form column inside a white card on a
+   grey band, and a two-up photo grid at 523px per cell. Where the live values
+   fail contrast — #ccc field borders, #aaa placeholder text — the insights
+   kit's field-line and muted tokens stand in; that decision was already made
+   once for /insights and is not re-litigated here.
+   ============================================================================ */
+
+.cr {
+  font-family: var(--d1-font);
+  color: var(--c-body);
+  font-size: 16px;
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+}
+.cr *,
+.cr *::before,
+.cr *::after {
+  box-sizing: border-box;
+}
+.cr img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+.cr a {
+  color: inherit;
+}
+.cr h1,
+.cr h2 {
+  margin: 0;
+  font-weight: var(--fw-bold);
+  font-size: 32px;
+  line-height: 38px;
+  color: var(--c-ink);
+  letter-spacing: normal;
+}
+.cr p {
+  margin: 0;
+}
+
+/* Focus: one treatment, drawn around the whole target. Orange TEXT token, not
+   the fill — a focus ring needs 3:1 and #FF6600 does not clear it. */
+.cr a:focus-visible,
+.cr button:focus-visible,
+.cr input:focus-visible,
+.cr textarea:focus-visible,
+.cr [tabindex]:focus-visible {
+  outline: 2px solid var(--c-orange-text);
+  outline-offset: 2px;
+}
+
+.cr .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* The content column the chrome uses: 1240 cap, 80px gutters, content at
+   x=180 on a 1440 viewport. */
+.cr-wrap {
+  max-width: var(--d1-max);
+  margin: 0 auto;
+  padding: 0 var(--d1-gutter);
+}
+
+/* ---- Hero ------------------------------------------------------------------ */
+.cr-hero {
+  background: var(--c-white);
+}
+.cr-hero__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 583px);
+  gap: var(--sp-12);
+  align-items: center;
+  min-height: 436px;
+  padding-top: var(--sp-8);
+  padding-bottom: var(--sp-8);
+}
+.cr-hero__copy {
+  max-width: 520px;
+}
+.cr-crumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--sp-2);
+  margin: 0 0 var(--sp-6);
+  padding: 0;
+  list-style: none;
+  font-size: var(--t-small);
+  line-height: 1.5;
+  color: var(--c-muted);
+}
+.cr-crumbs li + li::before {
+  content: "›";
+  margin-right: var(--sp-2);
+}
+.cr-crumbs a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.cr-crumbs [aria-current] {
+  color: var(--c-ink);
+}
+.cr-clutch {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+  font-size: var(--t-small);
+  color: var(--c-muted);
+}
+.cr-clutch img {
+  width: 80px;
+  height: 24px;
+}
+.cr-clutch__stars {
+  display: inline-flex;
+  gap: 2px;
+  color: var(--c-orange);
+}
+.cr-clutch__stars svg {
+  width: 14px;
+  height: 14px;
+}
+.cr-hero h1 {
+  margin-bottom: var(--sp-6);
+}
+/* .cr p resets margins at (0,1,1); these two need the extra class to win. */
+.cr p.cr-hero__lede {
+  margin-bottom: var(--sp-8);
+  max-width: 492px;
+}
+.cr-hero__photo {
+  width: 100%;
+  aspect-ratio: 583 / 396;
+  object-fit: cover;
+  border-radius: var(--radius);
+}
+
+/* The hero CTA. Matches the live button (52px tall, 8px radius, 275 wide),
+   which is NOT the chrome's .d1-btn — that one is 42px at 2px. Hover/pressed
+   go to the deep orange; text stays white as it is on the live page. */
+.cr-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 275px;
+  min-height: 52px;
+  padding: var(--sp-2) var(--sp-6);
+  border: 2px solid var(--c-orange);
+  border-radius: var(--radius);
+  background: var(--c-orange);
+  color: var(--c-white);
+  font-weight: var(--fw-bold);
+  font-size: 16px;
+  line-height: 1.2;
+  text-decoration: none;
+  transition:
+    background var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
+}
+.cr-cta:hover,
+.cr-cta:active {
+  background: var(--c-orange-deep);
+  border-color: var(--c-orange-deep);
+}
+
+/* ---- How to apply ---------------------------------------------------------- */
+.cr-how {
+  padding: 80px 0;
+  text-align: center;
+}
+.cr-how__inner {
+  max-width: 900px;
+}
+.cr-how h2 {
+  margin-bottom: var(--sp-6);
+}
+.cr-how p + p {
+  margin-top: var(--sp-6);
+}
+
+/* ---- Apply (the grey band and the card) ------------------------------------ */
+.cr-apply {
+  padding: 80px 0;
+  background: var(--c-wash);
+}
+.cr-card {
+  max-width: 646px;
+  margin: 0 auto;
+  padding: 40px 32px 48px;
+  background: var(--c-white);
+  border-radius: var(--radius);
+  box-shadow: 0 2px 12px rgb(0 0 0 / 8%);
+}
+.cr-card__title {
+  margin: 0 0 var(--sp-6);
+  font-size: var(--t-h1);
+  line-height: 52px;
+  text-align: center;
+  color: var(--c-body);
+}
+
+.cr-form {
+  display: grid;
+  gap: var(--sp-4);
+}
+.cr-form[hidden] {
+  display: none;
+}
+.cr-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-4);
+}
+.cr-field {
+  display: grid;
+  gap: var(--sp-2);
+}
+.cr-form input:not([type="checkbox"]):not([type="file"]),
+.cr-form textarea {
+  width: 100%;
+  min-height: 56px;
+  padding: 15px;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--c-body);
+  background: var(--c-white);
+  border: 1px solid var(--c-field-line);
+  border-radius: 4px;
+}
+.cr-form textarea {
+  min-height: 216px;
+  resize: vertical;
+}
+.cr-form ::placeholder {
+  color: var(--c-muted);
+  opacity: 1;
+}
+.cr-form [aria-invalid="true"] {
+  border-color: #b00020;
+}
+.cr-field__error {
+  margin: 0;
+  font-size: var(--t-small);
+  line-height: 1.4;
+  color: #b00020;
+}
+.cr-form__row .cr-field__error {
+  grid-column: 1 / -1;
+}
+
+.cr-choices {
+  margin: var(--sp-2) 0 0;
+  padding: 0;
+  border: 0;
+  display: grid;
+  gap: var(--sp-3);
+}
+.cr-choices legend {
+  padding: 0;
+  margin-bottom: var(--sp-3);
+  font-size: 17px;
+  font-weight: var(--fw-bold);
+  color: var(--c-ink);
+}
+.cr-choice {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--sp-3);
+  align-items: center;
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--c-ink);
+  cursor: pointer;
+}
+.cr-choice input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--c-orange);
+}
+
+/* ---- Files ------------------------------------------------------------------ */
+.cr-files {
+  display: grid;
+  gap: var(--sp-3);
+  margin-top: var(--sp-2);
+}
+.cr-files__label {
+  font-size: 17px;
+  font-weight: var(--fw-bold);
+  color: var(--c-ink);
+}
+.cr-files__max {
+  font-weight: var(--fw-bold);
+}
+.cr-drop {
+  display: grid;
+  justify-items: center;
+  gap: var(--sp-3);
+  min-height: 216px;
+  padding: var(--sp-6);
+  text-align: center;
+  border: 1px dashed rgb(255 102 0 / 45%);
+  border-radius: 4px;
+  transition:
+    border-color var(--dur) var(--ease),
+    background var(--dur) var(--ease);
+  align-content: center;
+}
+.cr-drop.is-over {
+  border-color: var(--c-orange);
+  border-style: solid;
+  background: var(--c-wash);
+}
+.cr-drop__icon {
+  width: 64px;
+  height: 48px;
+  color: var(--c-orange);
+}
+.cr-drop__text {
+  font-size: 16px;
+  color: var(--c-body);
+}
+.cr-drop__browse {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: var(--fw-bold);
+  color: var(--c-orange-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.cr-drop__rules {
+  font-size: var(--t-small);
+  line-height: 1.5;
+  color: var(--c-muted);
+}
+.cr-files.is-invalid .cr-drop {
+  border-color: #b00020;
+}
+
+.cr-files__list {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cr-files__list:empty {
+  display: none;
+}
+.cr-file {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  gap: var(--sp-3);
+  align-items: center;
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--t-small);
+  line-height: 1.4;
+  background: var(--c-wash);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.cr-file__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--c-ink);
+  font-weight: 600;
+}
+.cr-file__size {
+  color: var(--c-muted);
+}
+.cr-file__status {
+  color: var(--c-muted);
+}
+.cr-file[data-state="done"] .cr-file__status {
+  color: #1e7a4a;
+}
+.cr-file[data-state="error"] .cr-file__status {
+  color: #b00020;
+}
+.cr-file__remove {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--c-muted);
+  cursor: pointer;
+}
+.cr-file__remove:hover {
+  background: var(--c-hairline);
+  color: var(--c-ink);
+}
+.cr-file__bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--c-hairline);
+}
+.cr-file__bar span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--c-orange);
+  transition: width var(--dur) linear;
+}
+.cr-file[data-state="done"] .cr-file__bar {
+  display: none;
+}
+
+/* ---- Honeypot, submit, status ---------------------------------------------- */
+/* Off-screen, not display:none — a bot that only checks visibility still
+   fills it, which is the point. */
+.cr-form__hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* Full width, 56px, ink on orange (5.8:1) — as on the live form. */
+.cr-submit {
+  margin-top: var(--sp-2);
+  min-height: 56px;
+  padding: var(--sp-3) var(--sp-4);
+  border: 0;
+  border-radius: 2px;
+  background: var(--c-orange);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: 18px;
+  font-weight: var(--fw-bold);
+  cursor: pointer;
+  transition: background var(--dur) var(--ease);
+}
+.cr-submit:hover {
+  background: var(--c-orange-deep);
+}
+.cr-submit[disabled] {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.cr-form__status {
+  font-size: 15px;
+  line-height: 1.5;
+}
+.cr-form__status:empty {
+  display: none;
+}
+.cr-form__status[data-state="error"] {
+  color: #b00020;
+}
+
+.cr-done[hidden] {
+  display: none;
+}
+.cr-done {
+  text-align: center;
+  padding: var(--sp-6) 0 var(--sp-4);
+}
+.cr-done__title {
+  margin-bottom: var(--sp-3);
+  font-size: var(--t-h3);
+  line-height: 1.3;
+}
+.cr p.cr-done__text {
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+/* ---- Gallery ---------------------------------------------------------------- */
+.cr-gallery {
+  padding: 80px 0 96px;
+}
+.cr-gallery h2 {
+  margin-bottom: var(--sp-12);
+  text-align: center;
+}
+.cr-gallery__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-12) var(--sp-8);
+  max-width: 1110px;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+.cr-gallery figure {
+  margin: 0;
+}
+.cr-gallery img {
+  width: 100%;
+  aspect-ratio: 584 / 382;
+  object-fit: cover;
+  border-radius: 5px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 15%);
+}
+.cr-gallery figcaption {
+  margin-top: var(--sp-4);
+  text-align: center;
+  font-size: 16px;
+  color: var(--c-muted);
+}
+
+/* ---- Narrow ------------------------------------------------------------------ */
+@media (max-width: 899px) {
+  .cr-wrap {
+    padding: 0 var(--sp-6);
+  }
+  .cr-hero__grid {
+    grid-template-columns: 1fr;
+    gap: var(--sp-8);
+    min-height: 0;
+    padding-top: var(--sp-6);
+    padding-bottom: 0;
+  }
+  .cr-hero__copy {
+    max-width: none;
+  }
+  /* The photo goes full-bleed under the copy, as on the live page. */
+  .cr-hero__photo {
+    width: auto;
+    margin: 0 calc(-1 * var(--sp-6));
+    max-width: none;
+    border-radius: 0;
+    aspect-ratio: 4 / 3;
+  }
+  .cr-cta {
+    width: 100%;
+  }
+  .cr-how,
+  .cr-apply,
+  .cr-gallery {
+    padding-top: var(--sp-16);
+    padding-bottom: var(--sp-16);
+  }
+  .cr-gallery__grid {
+    grid-template-columns: 1fr;
+    gap: var(--sp-8);
+  }
+}
+
+@media (max-width: 599px) {
+  .cr h1,
+  .cr h2 {
+    font-size: 28px;
+    line-height: 34px;
+  }
+  .cr-card {
+    padding: var(--sp-8) var(--sp-4) var(--sp-8);
+  }
+  .cr-card__title {
+    font-size: var(--t-h2);
+    line-height: 1.25;
+  }
+  .cr-form__row {
+    grid-template-columns: 1fr;
+  }
+  .cr-file {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .cr-file__size {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cr * {
+    transition: none !important;
+  }
+}

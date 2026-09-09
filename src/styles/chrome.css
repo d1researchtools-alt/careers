@@ -1,0 +1,1330 @@
+/* Hand-written design1st.com chrome.
+ *
+ * Replaces the vendored Elementor snapshot (src/chrome/chrome.json): ~670 KB of
+ * markup, 46 stylesheets, ~247 KB of inline CSS and 57 scripts collapse to this
+ * file plus two Astro components.
+ *
+ * Every value here was measured off the live site with scripts/extract-tokens.mjs
+ * (computed styles + bounding boxes at each breakpoint), not eyeballed. Anything
+ * that looks like a magic number is a measurement — see artifacts/layout-*.json.
+ *
+ * Type note (revised 2026-07-22 — this reverses the earlier "do NOT load
+ * Switzer" rule; read before reverting):
+ * The live site asks for "Switzer Variable" but never ships an @font-face for
+ * it, so every design1st.com page renders in a fallback. That is a defect, not
+ * a design (see the /insights handoff spec: DIAGNOSIS finding #2, Leo Ticket 2)
+ * — the brand's first rule is "one typeface: Switzer". We used to reproduce the
+ * broken stack so the vendored chrome pixel-matched the parent site. As of the
+ * v2 handoff we ship the real font instead, on an explicit owner decision.
+ *
+ * CONSEQUENCE: scripts/compare-chrome.mjs now reports diffs on every text run
+ * against the live site. That red is EXPECTED and stays until WordPress ships
+ * Switzer too (Ticket 2). It is not a regression in the chrome geometry — box
+ * positions still match; only glyph rendering differs.
+ */
+
+/* The snapshot chrome inherited a reset from Astra's stylesheet. Standing alone
+   we need our own, or the UA's default body margin insets the whole chrome by
+   8px and nothing lines up. overflow-x mirrors what the live site sets. */
+body {
+  margin: 0;
+  overflow-x: hidden;
+  /* Standing alone we have no Astra stylesheet, so nothing set a family on
+     <body> at all and article copy fell back to the UA serif. The chrome set
+     --d1-font on .d1-header/.d1-footer only; putting it here makes the whole
+     document — chrome and article alike — one typeface, per brand rule §0.2. */
+  font-family: var(--d1-font);
+}
+
+/* Switzer, the brand typeface — one variable file covering the whole 100–900
+   weight range in 43 KB (the four static weights the spec asks for are 77 KB
+   between them, and this throws in 600 for free).
+
+   Source: Fontshare's own Switzer_Complete.zip, Fonts/WEB/fonts/. Shipped
+   BYTE-FOR-BYTE UNMODIFIED — the ITF Free Font License §01 grants free
+   commercial web use, but §02 forbids modifying or adapting the font software
+   without written consent, which rules out subsetting it. Do not run this
+   through pyftsubset/glyphhanger to save the ~25 KB.
+
+   Fontshare's CSS API only serves static instances named 'Switzer'; the
+   variable face exists solely in the download, which is why the live site's
+   "Switzer Variable" declaration never resolved against the CDN. Declared
+   under BOTH names: "Switzer Variable" is what design1st.com and --d1-font ask
+   for, "Switzer" is what the handoff spec's brand-tokens.css and the WP h2/h3
+   rules ask for. One download, either spelling. */
+@font-face {
+  font-family: "Switzer Variable";
+  /* Lives under src/ so Vite fingerprints it and rewrites this URL with the
+     right base — a public/ path would need hardcoding /insights, which breaks
+     the ASTRO_BASE=/ staging build. */
+  src: url("../fonts/switzer-variable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Switzer";
+  src: url("../fonts/switzer-variable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Tokens (--d1-*, --brand-*) now live in tokens.css, imported ahead of this
+   file by Layout.astro. Keeping them there stops the chrome, the article and
+   Allan's brand-tokens.css from drifting into three different greys again. */
+
+.d1-container {
+  /* border-box is load-bearing: with the UA default the gutters would be added
+     OUTSIDE max-width, rendering a 1400px box at x=20 (content at x=100 instead
+     of x=180) and overflowing the viewport by 30px at tablet. */
+  box-sizing: border-box;
+  max-width: var(--d1-max);
+  margin-inline: auto;
+  padding-inline: var(--d1-gutter);
+  width: 100%;
+}
+
+/* ---------------------------------------------------------------- header -- */
+
+.d1-header {
+  background: var(--d1-grey);
+  font-family: var(--d1-font);
+  padding-top: 8px;
+}
+
+/* Utility strip: Search · phone · Contact Us, right-aligned. */
+.d1-util {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  height: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 24px;
+  color: var(--d1-on-dark);
+}
+
+.d1-util a,
+.d1-util span {
+  color: inherit;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.d1-util a {
+  transition: color 0.3s ease;
+}
+
+.d1-util a:hover {
+  color: var(--d1-orange);
+}
+
+.d1-util__icon {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+.d1-util__label {
+  padding-left: 5px;
+}
+
+.d1-util__sep {
+  opacity: 0.9;
+}
+
+/* Main row: logo | nav | CTAs. 79px tall, contents vertically centred — the
+   remaining 118px - 8 (pad) - 24 (util) - 7 (gap) of header height. */
+.d1-bar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 79px;
+  margin-top: 7px;
+}
+
+.d1-logo {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+
+.d1-logo img {
+  width: 158px;
+  height: 27px;
+  max-width: 200px;
+  display: block;
+}
+
+/* The <nav> wrapper — not the <ul> — is .d1-bar's flex child, so the "grow and
+   centre" has to live here or the link cluster shrink-wraps flush left. */
+.d1-bar > nav {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+.d1-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+}
+
+.d1-nav__link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  height: 44px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  color: var(--d1-on-dark);
+  text-decoration: none;
+  white-space: nowrap;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  /* Was "D1 Roboto" — the live site's Element Pack nav resolves to the Roboto
+     Elementor loads locally, so these links rendered ~6% narrower than the rest
+     of the chrome. Reproducing that meant two families on one screen, which is
+     the §0.2 violation DIAGNOSIS finding #2 calls out. Now inherits Switzer. */
+  font-family: inherit;
+  transition: color 0.3s ease;
+}
+
+/* Live triggers go orange on hover over 0.3s — matched here, along with the
+   open state, so an open menu keeps its trigger highlighted. */
+.d1-nav__link:hover,
+.d1-nav__item[data-open="true"] .d1-nav__link {
+  color: var(--d1-orange);
+}
+
+.d1-nav__chev {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  transition: transform 0.3s ease;
+}
+
+.d1-nav__item[data-open="true"] .d1-nav__chev {
+  transform: rotate(180deg);
+}
+
+/* ------------------------------------------------------ mega menu panels -- */
+
+.d1-header {
+  position: relative;
+}
+
+.d1-panel[hidden] {
+  display: none;
+}
+
+/* Anchored to the header rather than the nav item: the live panel spans the
+   full 1080px content column regardless of which trigger opened it, and starts
+   7px above the header's bottom edge. */
+.d1-panel {
+  position: absolute;
+  top: calc(100% - 7px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1080px, calc(100% - 40px));
+  background: #f5f5f5; /* sampled from the live panel — not white */
+  /* The live panel carries a 1px black border with an 8px radius, and TWO
+     shadows: the outer drop shadow on the panel plus a softer offset one on the
+     bordered container inside it. I originally measured the outer wrapper, which
+     reports radius:0 and no border — the visible box is the inner container. */
+  border: 1px solid #000;
+  border-radius: 8px;
+  box-shadow:
+    0 0 10px rgb(0 0 0 / 50%),
+    0 7px 10px rgb(0 0 0 / 14%);
+  z-index: 1020;
+  /* One less than the content inset on each side, because the 1px border now
+     supplies it: content still lands at x=21 / y=24. */
+  padding: 23px 0 27px 20px;
+  box-sizing: border-box;
+  text-align: left;
+  cursor: default;
+  max-height: calc(100vh - 130px);
+  overflow-y: auto;
+}
+
+/* Link columns butt against each other (238.2px, no gap); only the promo column
+   is separated, by 20px. */
+.d1-panel__grid {
+  display: grid;
+  grid-template-columns: 238.2px 238.2px 238.2px 1fr;
+  column-gap: 0;
+  align-items: start;
+}
+
+/* The rule sits under the text with no padding between — 21px of text, then the
+   2px border, then 28px before the first group. */
+.d1-panel__heading {
+  width: 205.4px;
+  max-width: 100%;
+  margin: 0 0 12px;
+  padding-bottom: 0;
+  border-bottom: 2px solid var(--d1-orange);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 21px;
+  text-transform: uppercase;
+  color: #3a3a3a;
+}
+
+/* The live link columns are NOT uniformly spaced — Elementor gives each its own
+   left padding, so column 2's content sits 1px further right and column 3's a
+   full 15.9px. Without this every glyph in the last two columns is offset and
+   the panel diff stays high even though the column boxes line up.
+   Scoped to Services: Portfolio uses a different column model entirely. */
+.d1-panel--services .d1-panel__col:nth-child(2) {
+  padding-left: 1px;
+}
+
+.d1-panel--services .d1-panel__col:nth-child(3) {
+  padding-left: 15.9px;
+}
+
+/* ---- Portfolio panel: its own padding, column widths and card sizing ---- */
+
+.d1-panel--portfolio {
+  padding: 30px; /* + the 1px border = 31px content inset */
+}
+
+.d1-panel--portfolio .d1-panel__grid {
+  grid-template-columns: 242.8px 291.3px 224.9px 258.8px;
+}
+
+.d1-panel--portfolio .d1-panel__heading {
+  width: auto;
+  margin-bottom: 20px;
+  /* Portfolio's headings are #111 where Services' are #3a3a3a. */
+  color: var(--d1-ink);
+}
+
+/* Each group is a single hover target spanning the full column width — icon,
+   title and every sub-link inside one rounded box that turns white on hover.
+   The 16px padding is what indents the content from the column edge; the box
+   itself starts at the edge, which is why hovering anywhere in the block
+   highlights the whole thing. */
+.d1-group {
+  width: 205.4px;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 16px;
+  margin: 0;
+  border-radius: 8px;
+  transition:
+    background-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.d1-group:hover {
+  background-color: #fff;
+}
+
+.d1-group:hover .d1-group__title {
+  color: var(--d1-orange);
+}
+
+.d1-group__title {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 28.4px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 24px;
+  text-transform: capitalize;
+  color: var(--d1-ink);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.d1-group__title:hover {
+  color: var(--d1-orange);
+}
+
+.d1-group__icon {
+  width: 26.4px;
+  height: 26.4px;
+  flex: none;
+}
+
+/* Sub-links start 31px inside the group, putting the bullet at x=68 in the
+   panel and its text at x=77.3 — matching the live icon-list. */
+.d1-group__links {
+  list-style: none;
+  margin: 7.9px 0 0;
+  padding: 0 0 0 31px;
+  /* Our list box renders 1px taller than the live one; pulling that back here
+     keeps the sub-links where they are while making the group pitch (186.3px)
+     exact, which matters because it compounds down the column. */
+  margin-bottom: -1px;
+}
+
+/* 14px rows on a 15px pitch; the last row drops its trailing pixel so the
+   group's total height (and therefore the pitch between groups) matches. */
+.d1-group__links li {
+  margin-bottom: 1px;
+}
+
+.d1-group__links li:last-child {
+  margin-bottom: 0;
+}
+
+/* 14.3px, not 9.3px: the live bullet glyph occupies 9.3px and its text span
+   adds another 5px of padding, so the text ink starts at x=82.3 in the panel.
+   Getting this wrong offsets every sub-link's glyphs and lights up the whole
+   panel in the diff even though every box is in the right place. */
+.d1-group__links a {
+  position: relative;
+  display: block;
+  padding: 0 0 1px 14.3px;
+  font-size: 10px;
+  line-height: 13px;
+  text-transform: capitalize;
+  color: var(--d1-grey);
+  text-decoration: none;
+  /* The live list never wraps — the longest labels sit right at the column
+     width, and letting them wrap adds a second line to 7 of them, which
+     cascades into ~70px of extra panel height. */
+  white-space: nowrap;
+  transition: color 0.3s ease;
+}
+
+/* Bulleted, drawn rather than using a list-marker so the spacing is exact. */
+.d1-group__links a::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 2.7px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* Deliberately no :hover — the live sub-links do not react at all (verified by
+   screenshotting the same region hovered and unhovered: 0 pixels change). */
+
+/* Portfolio-style columns: every link carries its own icon, and the text is
+   full size rather than the small bulleted sub-links Services uses. */
+.d1-iconlist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.d1-iconlist a {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 0 8px 8px;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--d1-grey);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+/* 27.5 x 22, not square — the live icon box is wider than it is tall, and the
+   glyph is flush left inside it. Centring it (object-fit's default) pushes every
+   icon ~3px right. */
+.d1-iconlist img {
+  width: 27.5px;
+  height: 22px;
+  object-fit: contain;
+  object-position: left center;
+  flex: none;
+}
+
+/* Same as the Services sub-links: no hover reaction on the live site. */
+
+/* Featured case-study cards */
+.d1-card-link {
+  display: flex;
+  align-items: stretch;
+  box-sizing: border-box;
+  gap: 9px;
+  min-height: 78px;
+  margin-bottom: 20px;
+  background: #fff; /* cards sit white on the panel's grey */
+  border: 1px solid #e2e4e7;
+  border-radius: 4px;
+  overflow: hidden;
+  text-decoration: none;
+  transition: border-color 0.3s ease;
+}
+
+/* The card stack sits 20px below the "See All" link above it, and the last card
+   carries no trailing space or the column overshoots the panel. */
+.d1-card-link:first-of-type {
+  margin-top: 20px;
+}
+
+.d1-card-link:last-of-type {
+  margin-bottom: 0;
+}
+
+.d1-card-link:hover {
+  border-color: var(--d1-orange);
+}
+
+.d1-card-link img {
+  width: 80px;
+  height: auto;
+  align-self: stretch;
+  object-fit: cover;
+  flex: none;
+}
+
+.d1-card-link span {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 1px 10px 1px 0;
+}
+
+.d1-card-link strong {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--d1-ink);
+}
+
+.d1-card-link em {
+  font-size: 13px;
+  font-style: normal;
+  line-height: 18px;
+  color: var(--d1-body);
+}
+
+/* Promo column — the only column separated from its neighbour, and the only one
+   with inner padding (content sits 30px inside its 323.4px box). */
+.d1-promo {
+  margin-left: 20px;
+  padding-inline: 30px;
+}
+
+.d1-promo .d1-panel__heading {
+  width: auto;
+  margin-bottom: 26px;
+}
+
+.d1-promo__text {
+  margin: 0 0 20px;
+  font-size: 14px;
+  line-height: 21px;
+  color: var(--d1-ink);
+}
+
+.d1-promo__cta,
+.d1-promo__btn {
+  display: block;
+  box-sizing: border-box;
+  margin-bottom: 20px;
+  /* Labels carry hard line breaks from the source markup. */
+  white-space: pre-line;
+  font-size: 14px;
+  font-weight: 600;
+  /* 24px leading gives 40px one-line / 64px two-line buttons, as measured. */
+  line-height: 24px;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 4px;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.d1-promo__cta {
+  min-height: 48px;
+  padding: 12px 16px;
+  background: var(--d1-orange);
+  color: #fff;
+}
+
+.d1-promo__cta:hover {
+  background: #e65c00;
+}
+
+/* The first outlined button is 71px tall on the live site where the other
+   two-line buttons are 64 — inconsistent in the source, but it sets the
+   position of everything below it. */
+.d1-promo__cta + .d1-promo__btn {
+  min-height: 71px;
+}
+
+.d1-promo__btn {
+  padding: 7px 16px;
+  background: #fff;
+  /* #54565a, not the near-black used for headings. */
+  color: var(--d1-grey);
+  border: 1px solid #d5d7da;
+}
+
+.d1-promo__btn:hover {
+  border-color: var(--d1-orange);
+  color: var(--d1-orange);
+}
+
+/* Simple list panels (About, Free Tools) drop under their own trigger rather
+   than spanning the content column, so only these nav items become a
+   containing block — mega panels still anchor to .d1-header.
+   They are also styled quite differently from the mega panels: 3px radius, no
+   border, a single shadow, and a fixed 300px width. */
+.d1-nav__item--list {
+  position: relative;
+}
+
+.d1-panel--list {
+  width: 300px;
+  min-width: 0;
+  top: calc(100% + 10px);
+  left: 0;
+  transform: none;
+  padding: 15px 20px;
+  border: 0;
+  border-radius: 3px;
+  box-shadow: 0 0 10px rgb(0 0 0 / 50%);
+}
+
+.d1-panel__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.d1-panel__list li {
+  margin-bottom: 1px;
+}
+
+.d1-panel__list li:last-child {
+  margin-bottom: 0;
+}
+
+.d1-panel__list a {
+  display: block;
+  position: relative;
+  padding: 0;
+  /* The 2px that makes each row 30.9px tall is a transparent bottom border,
+     not padding — it turns orange on hover to draw the underline. */
+  border-bottom: 2px solid transparent;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 28.9px;
+  color: var(--d1-ink);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    color 0.2s linear,
+    border-bottom-color 0.2s linear;
+}
+
+.d1-panel__list a:hover {
+  color: var(--d1-orange);
+  border-bottom-color: var(--d1-orange);
+}
+
+/* On hover the live link appends an orange Font Awesome arrow (\f061) at 20px.
+   We have no icon font, so the same glyph is drawn from its path data as an
+   inline SVG background — no extra request, identical shape. */
+.d1-panel__list a::after {
+  content: "";
+  display: inline-block;
+  width: 0;
+  height: 20px;
+  margin-left: 0;
+  vertical-align: -4px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512' fill='%23ff6600'%3E%3Cpath d='M190.5 66.9l22.2-22.2c9.4-9.4 24.6-9.4 33.9 0L441 239c9.4 9.4 9.4 24.6 0 33.9L246.6 467.3c-9.4 9.4-24.6 9.4-33.9 0l-22.2-22.2c-9.5-9.5-9.3-25 .4-34.3L311.4 296H24c-13.3 0-24-10.7-24-24v-32c0-13.3 10.7-24 24-24h287.4L190.9 101.2c-9.8-9.3-10-24.8-.4-34.3z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: 17.5px 20px;
+  opacity: 0;
+  transition:
+    width 0.2s linear,
+    margin-left 0.2s linear,
+    opacity 0.2s linear;
+}
+
+.d1-panel__list a:hover::after {
+  width: 17.5px;
+  margin-left: 8px;
+  opacity: 1;
+}
+
+.d1-cta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: none;
+  /* The live CTA block stops 2px short of the content column's right edge. */
+  margin-right: 2px;
+}
+
+.d1-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 22px;
+  font-family: inherit;
+  /* 0.25px of tracking, which is what made these buttons 13.5px narrower than
+     the originals in total — and that in turn pushed the whole nav cluster 5px
+     right, because the nav centres in the space the CTAs leave behind. */
+  letter-spacing: 0.25px;
+  /* Live CTAs render "Email A Question" / "Talk To Us" — the capitalisation is
+     CSS, not the source string. */
+  text-transform: capitalize;
+  color: var(--d1-on-dark);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* Outlined CTA is 46px tall because its 2px border sits outside the 42px box. */
+.d1-btn--ghost {
+  background: transparent;
+  border: 2px solid var(--d1-orange);
+  border-radius: 6px;
+}
+
+.d1-btn--ghost:hover {
+  background: var(--d1-orange);
+}
+
+.d1-btn--solid {
+  background: var(--d1-orange);
+  border: 0;
+  border-radius: 2px;
+  height: 42px;
+}
+
+.d1-btn--solid:hover {
+  background: #e65c00;
+}
+
+.d1-btn {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.d1-btn__arrow {
+  width: 18px;
+  height: 12.6px;
+  flex: none;
+}
+
+.d1-burger {
+  display: none;
+  background: none;
+  border: 0;
+  padding: 8px;
+  cursor: pointer;
+  color: var(--d1-on-dark);
+  margin-left: auto;
+}
+
+.d1-burger svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+/* ---------------------------------------------------------------- footer -- */
+
+.d1-footer {
+  background: #fff;
+  font-family: var(--d1-font);
+  color: var(--d1-body);
+}
+
+.d1-footer__main {
+  padding: 72px 24px 0;
+}
+
+/* Elementor wraps each footer column in a widget-wrap carrying its own 16px
+   top+bottom padding. Putting it on the column rather than the section matters
+   once the grid wraps: at tablet the columns form two rows and EACH row gets
+   its own 16+16, which a section-level allotment would undercount by 32px. */
+.d1-footer__group {
+  padding: 16px 0;
+}
+
+/* Not three equal thirds: the live groups are 376 / 360 / rest, which puts
+   Resources at x=556 and Contact at x=916 rather than the 540/900 an even split
+   gives. The footer region still "passed" the pixel diff with this wrong,
+   because footer text covers only a small share of its area — worth remembering
+   that a passing score is not proof of alignment. */
+.d1-footer__cols {
+  display: grid;
+  grid-template-columns: 376px 360px 1fr;
+  gap: 0;
+}
+
+.d1-footer__group h2 {
+  margin: 0 0 16px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 30px;
+  color: var(--d1-ink);
+}
+
+/* "Resources" is a linked heading; without this it renders as a blue underlined
+   UA link next to its unlinked siblings. */
+.d1-footer__group h2 a {
+  color: inherit;
+  text-decoration: none;
+  font: inherit;
+}
+
+/* Each heading spans a pair of link columns (2+2+2 across the 6-column grid the
+   live footer uses). */
+.d1-footer__pair {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* The live footer breaks Expertise 3+4 at desktop but 4+3 at tablet. Rather
+   than duplicating whole widget sets the way Elementor does, the one link that
+   moves is rendered in both columns and shown in exactly one. */
+.d1-tablet-only {
+  display: none;
+}
+
+/* Each group's inner pair has its own pitch and link width, so the hover
+   underline (which spans the full link box) is the right length too. */
+@media (min-width: 1200px) {
+  .d1-footer__group:nth-child(1) .d1-footer__pair {
+    grid-template-columns: repeat(2, 188px);
+  }
+
+  .d1-footer__group:nth-child(1) .d1-footer__links {
+    width: 156px;
+  }
+
+  .d1-footer__group:nth-child(2) .d1-footer__pair {
+    grid-template-columns: repeat(2, 180px);
+  }
+
+  .d1-footer__group:nth-child(2) .d1-footer__links {
+    width: 148px;
+  }
+
+  .d1-footer__group:nth-child(3) .d1-footer__pair {
+    grid-template-columns: repeat(2, 177px);
+  }
+}
+
+.d1-footer__links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.d1-footer__links a {
+  display: block;
+  padding: 8px 0;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 22px;
+  color: var(--d1-link);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+/* Footer links do NOT change colour on hover — a 3px bar fades in underneath.
+   Measured off the live link: ::after, full width, 3px, #3f444b, opacity 0 -> 1
+   on a 0.3s cubic-bezier(0.58, 0.3, 0.005, 1). I originally guessed an orange
+   colour swap, which was simply wrong. */
+.d1-footer__links a {
+  position: relative;
+}
+
+.d1-footer__links a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 3px;
+  background: #3f444b;
+  opacity: 0;
+  transition: opacity 0.3s cubic-bezier(0.58, 0.3, 0.005, 1);
+}
+
+.d1-footer__links a:hover::after {
+  opacity: 1;
+}
+
+.d1-contact__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 0;
+  font-size: 15px;
+  line-height: 22px;
+}
+
+/* "Head Office" is a label, not a tap target, so it sits tighter than the
+   phone/email link rows (reference measures 27.9px => 3px padding), and the
+   address hangs 16px below it rather than sitting flush.
+   Together these make Contact the tallest footer column, as it is on the live
+   site — which is what actually sets the section height, since .d1-footer__cols
+   is a stretch grid. */
+.d1-contact__row--label {
+  padding: 3px 0;
+}
+
+/* The gap below "Head Office" is breakpoint-specific: the contact rows are
+   30px tall at desktop but 25px below it, so a single value overshoots. Each is
+   measured against its own layout. Mobile needs none.
+   This matters more than it looks: .d1-footer__cols is a stretch grid, so the
+   contact column being the tallest is what sets the whole section's height. */
+@media (min-width: 1200px) {
+  .d1-contact__row--label {
+    margin-bottom: 16px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .d1-contact__row--label {
+    margin-bottom: 16px;
+  }
+}
+
+.d1-contact__row svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  margin-top: 4px;
+  fill: var(--d1-body);
+}
+
+.d1-contact__row a {
+  color: var(--d1-link);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.d1-contact__row a:hover {
+  color: var(--d1-orange);
+}
+
+.d1-contact__title {
+  font-weight: 700;
+  color: var(--d1-ink);
+}
+
+.d1-contact address {
+  font-style: normal;
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--d1-body);
+  margin: 0 0 26.25px;
+}
+
+.d1-footer__badges {
+  padding: 24.6px 24px 60px;
+}
+
+/* Fixed columns rather than flex+gap. The live badges row is an Elementor
+   full-width section whose items sit centred in equal cells — the uneven
+   "gaps" are just narrow logos floating in fixed-width cells. Using a real
+   gap adds height on wrap that the original doesn't have. */
+.d1-badges {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  align-items: center;
+  justify-items: center;
+}
+
+.d1-badge {
+  height: auto;
+  max-width: 100%;
+}
+
+.d1-clutch {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.d1-clutch img {
+  width: 80px;
+  height: 23.7px;
+  display: block;
+}
+
+.d1-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  /* Matches the icon-font line-height the live rating row inherits. */
+  line-height: 28.9px;
+  color: var(--d1-link);
+}
+
+.d1-rating__stars {
+  display: inline-flex;
+  gap: 1px;
+}
+
+.d1-rating__stars svg {
+  width: 13px;
+  height: 13px;
+  fill: var(--d1-body);
+}
+
+/* Bottom bar */
+.d1-footer__bar {
+  background: var(--d1-grey);
+  height: 51px;
+  display: flex;
+  align-items: center;
+}
+
+.d1-footer__bar .d1-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.d1-copyright {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 21px;
+  color: var(--d1-on-dark-dim);
+}
+
+.d1-social {
+  display: flex;
+  align-items: center;
+  gap: 19.2px; /* 37.2px pitch − 18px icon */
+}
+
+.d1-social a {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10%;
+  color: var(--d1-social);
+  transition: color 0.3s ease;
+}
+
+.d1-social svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.d1-social a:hover {
+  color: #fff;
+  opacity: 0.9;
+}
+
+/* ----------------------------------------------------------- responsive -- */
+
+/* Elementor's breakpoints, which is what the live chrome actually switches on:
+   mobile <=767, tablet 768-1024, desktop >=1025. Measured behaviour:
+     >=1025  one row: logo | nav | CTAs            header 118px
+     768-1024 nav stays, CTAs wrap to a third row  header 162px
+     <=767   logo + hamburger only                 header  94px */
+
+@media (max-width: 1199px) {
+  :root {
+    --d1-gutter: 15px;
+  }
+
+  /* Tablet splits 44px (logo+nav) + 46px (CTA) after a 24px gap, not the 61/58
+     the desktop rules imply. Same 162px total, different internal split — which
+     is why the height check passed while the pixels didn't. */
+  .d1-bar {
+    flex-wrap: wrap;
+    height: auto;
+    margin-top: 24px;
+    row-gap: 0;
+  }
+
+  .d1-logo img {
+    width: 147px;
+    height: 25px;
+  }
+
+  /* The live tablet header reserves a ~237px logo column even though the logo
+     image is only 147px wide. Nav centres in what's left, so without the wider
+     reserved slot our nav cluster starts 45px too far left. The image stays
+     left-aligned at its own size, so nothing moves visually. */
+  .d1-logo {
+    flex: 0 0 237px;
+  }
+
+  /* Logo and nav share row two; the CTAs take a full-width row of their own.
+     8 + 24(util) + 24(gap) + 44(row1) + 46(cta) + 16(pad) = 162. */
+  .d1-nav {
+    height: 44px;
+  }
+
+  .d1-cta {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    height: 46px;
+    padding-bottom: 16px;
+  }
+
+  /* Tablet is the same story as desktop: fixed 180px pitch with 148px links,
+     not an even split of the available width. */
+  .d1-footer__cols {
+    grid-template-columns: 360px 1fr;
+    gap: 0;
+  }
+
+
+  .d1-badges {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  /* The badges row is a full-width section on the live site — it never gets the
+     boxed container's gutter below desktop. */
+  .d1-footer__badges .d1-container {
+    padding-inline: 0;
+  }
+}
+
+/* Tablet only — mobile also matches max-width:1024px, and a fixed link width
+   there makes the long labels wrap. */
+@media (min-width: 768px) and (max-width: 1199px) {
+  .d1-footer__pair {
+    grid-template-columns: repeat(2, 180px);
+  }
+
+  .d1-footer__links {
+    width: 148px;
+  }
+
+  .d1-tablet-only {
+    display: list-item;
+  }
+
+  .d1-tablet-hide {
+    display: none;
+  }
+
+  /* Content starts at x=40 on the live tablet footer. */
+  .d1-footer__main {
+    padding-inline: 25px;
+  }
+}
+
+@media (max-width: 767px) {
+  /* Mobile widens back out to a 24px gutter — it is not the tablet 15px
+     inherited down. */
+  :root {
+    --d1-gutter: 24px;
+  }
+
+  .d1-util {
+    justify-content: center;
+    gap: 10px;
+  }
+
+  /* Mobile utility strip is icon-only, except the phone number which keeps its
+     text. Without this "Contact Us" wraps to a second line. */
+  .d1-util__label:not(.d1-util__label--keep) {
+    display: none;
+  }
+
+  .d1-bar {
+    flex-wrap: nowrap;
+    height: 54px;
+    margin-top: 4px;
+  }
+
+  .d1-nav,
+  .d1-cta {
+    display: none;
+  }
+
+  .d1-burger {
+    display: block;
+  }
+
+  .d1-header {
+    padding-bottom: 4px;
+  }
+
+  .d1-footer__main {
+    padding: 24px;
+  }
+
+  .d1-footer__badges {
+    padding: 8px 12px 12px;
+  }
+
+  /* At mobile the strip wraps 3 / 3 / 4 — uneven, because it wraps on the logos'
+     natural widths rather than a fixed column count. A 35px minimum column gap
+     reproduces those exact wrap points. */
+  .d1-badges {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    column-gap: 35px;
+    row-gap: 33px;
+  }
+
+  /* These two sections carry their own horizontal padding, so the boxed
+     container must not add a second gutter on top. The bottom bar is left
+     alone — it relies on the container for its inset. */
+  .d1-footer__main .d1-container,
+  .d1-footer__badges .d1-container {
+    padding-inline: 0;
+  }
+
+  /* Single column at mobile, so the per-row padding above would double-count,
+     and the tablet row-gap would add voids the live footer doesn't have. */
+  .d1-footer__group {
+    padding: 0;
+  }
+
+  .d1-footer__cols {
+    gap: 0;
+  }
+
+  .d1-footer__cols {
+    grid-template-columns: 1fr;
+  }
+
+  /* One link per row at mobile — the live footer stacks these rather than
+     keeping the desktop pair of columns. */
+  .d1-footer__pair {
+    grid-template-columns: 1fr;
+  }
+
+  .d1-footer__links {
+    width: auto;
+  }
+
+  /* Link rows tighten from 38px to 34px at mobile. */
+  .d1-footer__links a {
+    padding: 6px 0;
+  }
+
+  /* Contact rows are 25px at mobile, not the 38px the base padding gives, and
+     the gap under "Head Office" applies here too. Contact is the tallest column
+     in the stacked layout, so these set the whole section's height. */
+  .d1-contact__row {
+    padding: 1.5px 0;
+  }
+
+  .d1-contact__row--label {
+    margin-bottom: 16px;
+  }
+
+  /* Icon-only utility links sit in a 27.5px box on the live site, not the bare
+     14px of the icon itself. */
+  .d1-util__search,
+  .d1-util > a:last-child {
+    padding: 0 6.75px;
+  }
+
+  /* Every stacked group after the first sits 32px lower — Contact as well as
+     Resources. Measured; an Elementor per-column artifact. */
+  .d1-footer__group:not(:first-child) {
+    margin-top: 32px;
+  }
+
+  /* Headings are 27.6px tall at mobile, not the 30px the desktop rule gives. */
+  .d1-footer__group h2 {
+    line-height: 27.6px;
+  }
+
+  /* The bar stays a row at mobile — copyright left (wrapping to two lines),
+     social right. Stacking them centred was wrong. */
+  .d1-footer__bar {
+    height: auto;
+    padding: 15px 0;
+  }
+
+  .d1-footer__bar .d1-container {
+    align-items: center;
+    gap: 12px;
+  }
+
+  .d1-social {
+    gap: 12px;
+  }
+}
+
+/* ============================================================================
+   MOBILE FOOTER
+   The stacked fallback the live site drops to is a ~1300px wall: fifteen links
+   at one per row, a badge strip that wraps 3/3/4 with holes punched in it by
+   space-between, and a fixed-height bottom bar the copyright line overflows.
+   None of this touches any width above 767.
+   ============================================================================ */
+
+/* Two columns for the link lists. The labels are short and the pitch is loose,
+   so one column bought nothing but scrolling. Contact keeps its single column:
+   its rows are address lines and phone numbers, which do not halve cleanly. */
+@media (min-width: 380px) and (max-width: 767px) {
+  .d1-footer__group:not(.d1-contact) .d1-footer__pair {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 16px;
+    /* Capped, or at 767px two 1fr tracks push the pair 360px apart and the
+       list stops reading as one list. Below ~460px the cap never binds. */
+    max-width: 440px;
+  }
+}
+
+@media (max-width: 767px) {
+  /* 34px per link row is a desktop pitch on a phone. */
+  .d1-footer__links a {
+    padding: 4px 0;
+  }
+
+  /* Centre the wrap instead of justifying it. space-between spreads a short
+     final row across the full width, which is what made the strip read as
+     scattered rather than as a set. */
+  .d1-badges {
+    justify-content: center;
+    column-gap: 26px;
+    row-gap: 24px;
+  }
+
+  /* The bar is 51px tall and holds a line that needs two of them at 390px.
+     Stack it instead of letting the copyright fight the social row. */
+  .d1-footer__bar {
+    height: auto;
+    padding: 14px 0;
+  }
+  .d1-footer__bar .d1-container {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+}

@@ -1,0 +1,14 @@
+name = "design1st-careers"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+# The Vercel PRODUCTION URL of the Astro app, no trailing slash.
+# Get it after `vercel --prod` (looks like https://design1st-careers.vercel.app).
+[vars]
+VERCEL_ORIGIN = "https://REPLACE-ME.vercel.app"
+
+# Run ONLY for /careers* — every other path on the zone keeps going to WordPress.
+# If your primary hostname is www, add a second identical block for www.design1st.com/careers*.
+[[routes]]
+pattern = "design1st.com/careers*"
+zone_name = "design1st.com"

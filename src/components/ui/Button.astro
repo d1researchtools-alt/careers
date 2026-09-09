@@ -1,0 +1,45 @@
+---
+// The chrome's CTA button. Wraps the .d1-btn class family so call sites stop
+// hand-assembling class strings (`class="d1-btn d1-btn--solid d1-step__next"`)
+// and the variant list stays enumerable.
+//
+// Geometry is deliberately NOT uniform between variants — solid is 42px tall
+// with a 2px radius, ghost is a 2px orange border at 6px. That asymmetry is
+// measured off design1st.com, not an oversight; see the notes in chrome.css.
+// Do not "harmonise" them without re-running `npm run chrome:diff`.
+import Icon from "@/components/ui/Icon.astro"
+
+interface Props {
+  variant: "solid" | "ghost"
+  /** Renders <a> when set, <button> otherwise. */
+  href?: string
+  type?: "button" | "submit"
+  /** Appends the trailing arrow glyph the live CTAs carry. */
+  arrow?: boolean
+  disabled?: boolean
+  class?: string
+  /** Any remaining attrs (data-open-form, data-next, aria-*) pass through. */
+  [key: string]: unknown
+}
+
+const {
+  variant, href, type = "button", arrow = false, disabled = false,
+  class: extra, ...rest
+} = Astro.props
+
+const cls = ["d1-btn", `d1-btn--${variant}`, extra].filter(Boolean).join(" ")
+---
+
+{
+  href ? (
+    <a {href} class={cls} {...rest}>
+      <slot />
+      {arrow && <Icon name="arrowRight" class="d1-btn__arrow" />}
+    </a>
+  ) : (
+    <button {type} class={cls} disabled={disabled} {...rest}>
+      <slot />
+      {arrow && <Icon name="arrowRight" class="d1-btn__arrow" />}
+    </button>
+  )
+}

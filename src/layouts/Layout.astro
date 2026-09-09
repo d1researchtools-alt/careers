@@ -1,0 +1,192 @@
+---
+import { getChrome } from "@/lib/chrome"
+import { IS_PRODUCTION } from "@/lib/env"
+import { withBase } from "@/lib/paths"
+import SiteHeader from "@/components/chrome/SiteHeader.astro"
+import SiteFooter from "@/components/chrome/SiteFooter.astro"
+import ContactModals from "@/components/chrome/ContactModals.astro"
+import "@/styles/tokens.css" // must precede chrome.css/article.css — defines their vars
+import "@/styles/chrome.css"
+
+interface Props {
+  title?: string
+  /**
+   * og:title, when it differs from <title>.
+   *
+   * They serve different readers. <title> is the ranking surface and carries
+   * the head query; a social card is read by a person, so it gets the human
+   * headline. Defaults to `title`, which is right for every page that has
+   * only one.
+   */
+  ogTitle?: string
+  description?: string
+  canonical?: string
+  ogImage?: string
+  /** Keep this page out of the index (drafts, the vercel.app origin, etc.). */
+  noindex?: boolean
+  /** og:type. "article" is right for the articles this layout was written for; the careers page is a "website". */
+  ogType?: "article" | "website"
+  /** Pages that manage their own column widths skip the placeholder wrapper. */
+  wide?: boolean
+}
+const {
+  title = "design1st — temp",
+  ogTitle,
+  description,
+  canonical,
+  ogImage,
+  ogType = "article",
+  noindex = false,
+  wide = false,
+} = Astro.props
+
+// Which chrome to render:
+//   "native"   – the hand-written Astro components (default). No WordPress CSS
+//                or JS at all: ~15 KB of chrome instead of ~670 KB of markup,
+//                46 stylesheets, ~247 KB of inline CSS and 57 scripts.
+//   "snapshot" – the vendored Elementor markup from src/chrome/chrome.json.
+//                Kept so scripts/compare-chrome.mjs can A/B the two, and as a
+//                fallback if the native chrome ever needs to be backed out.
+//
+// Set CHROME_MODE=snapshot to switch.
+const CHROME_MODE = (process.env.CHROME_MODE ?? "native") as "native" | "snapshot"
+const useSnapshot = CHROME_MODE === "snapshot"
+
+// Only pay for parsing/serving the snapshot when it is actually rendered.
+const snapshot = useSnapshot ? await getChrome() : null
+
+// The rest of design1st.com runs this container. Native chrome renders none of
+// the WordPress script chain, so until this existed the served HTML of
+// /insights held zero gtag/dataLayer references and "no pageviews" meant no
+// measurement rather than no traffic (TICKETS.md T1).
+//
+// Snapshot mode already replays the WP <script> sequence, GTM included, so it
+// is skipped there — two containers on one page double every hit.
+//
+// NOTE (T1, second half): cross-domain measurement for planning.design1st.com
+// and aitools.design1st.com is configured in the GTM/GA4 UI, not here. Without
+// it the Budget Estimator link in the rail starts a new session attributed as a
+// referral and the index gets no credit for the click.
+const GTM_ID = "GTM-WV7LZH"
+const gtmSrc = `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${GTM_ID}');`
+
+// Hiding the whole page from search also means keeping preview traffic and
+// local dev out of the production property.
+const tagThisPage = !useSnapshot && IS_PRODUCTION
+
+/** Keep the bare *.vercel.app origin out of the index. */
+const hideFromIndex = noindex || !IS_PRODUCTION
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+
+    {
+      /* The tab icon. Without these the browser falls back to /favicon.ico at
+         the origin — and design1st.com/favicon.ico answers 200 with ZERO bytes,
+         which is what WordPress serves once a Site Icon is set: it expects the
+         theme to print these <link rel="icon"> tags instead, which it does on
+         its own pages and cannot do on ours. A valid-but-empty icon is not a
+         miss the browser retries past, so /insights sat with a blank tab.
+
+         Vendored into public/chrome/ rather than hotlinked at
+         design1st.com/wp-content/..., matching logo-header.png: same files, but
+         they keep working on the bare *.vercel.app origin and survive a WordPress
+         media reshuffle. Re-download from the Site Icon if the brand mark changes. */
+    }
+    <link rel="icon" href={withBase("/chrome/favicon-32x32.png")} sizes="32x32" type="image/png" />
+    <link rel="icon" href={withBase("/chrome/favicon-192x192.png")} sizes="192x192" type="image/png" />
+    <link rel="apple-touch-icon" href={withBase("/chrome/favicon-180x180.png")} />
+    {description && <meta name="description" content={description} />}
+    {canonical && <link rel="canonical" href={canonical} />}
+
+    {
+      /* Two reasons a page here may be noindex: it's a draft, or it's being
+         served from the *.vercel.app origin rather than design1st.com. The
+         second one matters site-wide (HANDOFF.md §6) — if the origin is
+         indexable the article exists at two URLs and link equity forks. */
+      hideFromIndex && <meta name="robots" content="noindex, nofollow" />
+    }
+
+    {
+      /* GTM goes as high in <head> as it can, ahead of the chrome styles, so
+         the container is requested before the page paints. */
+      tagThisPage && <script is:inline set:html={gtmSrc} />
+    }
+
+    {title && <meta property="og:title" content={ogTitle ?? title} />}
+    {description && <meta property="og:description" content={description} />}
+    {canonical && <meta property="og:url" content={canonical} />}
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta property="og:type" content={ogType} />
+
+    {
+      /* Snapshot mode only: the WordPress stylesheet chain. The native chrome
+         needs none of this — src/styles/chrome.css is imported above. */
+      snapshot?.styleHrefs.map((href) => <link rel="stylesheet" href={href} />)
+    }
+    {snapshot?.inlineStyles.map((css) => <style set:html={css} />)}
+
+    <slot name="head" />
+  </head>
+  <body>
+    {
+      /* The no-JS half of the container. GTM requires it immediately after the
+         opening <body> tag. */
+      tagThisPage && (
+        <noscript>
+          <iframe
+            src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+            height="0"
+            width="0"
+            style="display:none;visibility:hidden"
+            title="Google Tag Manager"
+          />
+        </noscript>
+      )
+    }
+
+    {snapshot ? <Fragment set:html={snapshot.header} /> : <SiteHeader />}
+
+    <main class={wide ? "" : "temp-content"}>
+      <slot />
+    </main>
+
+    {snapshot ? <Fragment set:html={snapshot.footer} /> : <SiteFooter />}
+    {!snapshot && <ContactModals />}
+
+    {
+      /* Snapshot mode only: WordPress's exact script sequence, in order.
+         `is:inline` stops Astro from bundling/hoisting them so they run as the
+         theme expects. Scripts injected via set:html would NOT execute, hence
+         real tags here.
+
+         We intentionally drop defer/async and render everything synchronously:
+         all these tags sit at end-of-body (DOM already parsed), and mixing
+         deferred externals with non-deferred inline configs let inline code run
+         before jQuery/Elementor loaded ("jQuery is not defined"). Strict
+         document order guarantees each dependency runs before its dependents. */
+      snapshot?.scripts.map((s) =>
+        s.src ? (
+          <script src={s.src} type={s.type} is:inline />
+        ) : (
+          <script type={s.type} is:inline set:html={s.code} />
+        ),
+      )
+    }
+  </body>
+</html>
+
+<style>
+  /* Minimal breathing room for the placeholder content between the real
+     header and footer. Kept scoped so it does not fight Astra/Elementor. */
+  .temp-content {
+    max-width: 60rem;
+    margin: 0 auto;
+    padding: 3rem 1.25rem;
+  }
+</style>

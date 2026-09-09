@@ -1,0 +1,28 @@
+---
+// Renders one inlined Font Awesome glyph. Inline (not an icon font) so the
+// chrome pulls no webfont and each icon costs only its path data.
+import { icons, type IconName } from "./icons"
+
+interface Props {
+  name: IconName
+  class?: string
+  /** Decorative by default; pass a label when the icon is the only content. */
+  label?: string
+}
+
+const { name, class: className, label } = Astro.props
+const icon = icons[name]
+---
+
+<svg
+  viewBox={icon.viewBox}
+  class={className}
+  fill="currentColor"
+  aria-hidden={label ? undefined : "true"}
+  role={label ? "img" : undefined}
+  aria-label={label}
+  focusable="false"
+>
+  {label && <title>{label}</title>}
+  <path d={icon.d} />
+</svg>

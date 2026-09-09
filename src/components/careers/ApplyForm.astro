@@ -1,0 +1,403 @@
+---
+// The "Job Request Form" — Gravity Forms form #2, rebuilt.
+//
+// Text fields post as JSON to /api/apply, which forwards them into WordPress
+// and reports back in plain JSON (same pattern as the header's contact
+// modals). Files are different: they go from the browser STRAIGHT to Gravity
+// Forms' own upload endpoint, because Vercel caps a function's request body at
+// 4.5 MB and the form promises 15 MB per file. See src/pages/api/apply.ts for
+// the full reasoning; the short version is that design1st.com/?gf_page=… is
+// the same origin as design1st.com/careers, so the browser can post to it and
+// read the answer, which is exactly what the WordPress widget does too.
+//
+// Off design1st.com (astro dev, a *.vercel.app staging URL) that endpoint is
+// cross-origin, so the script falls back to /api/upload — a proxy with the
+// 4.5 MB cap. Good enough to test with a resume; not the production path.
+import { UPLOAD_RULES } from "@/lib/gravity"
+
+// The app is mounted under a base path (/careers in production), so the API
+// routes have to be resolved against it rather than the page URL.
+const API = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/api`
+
+/** Field 10's choices. Values must match the WordPress form exactly. */
+const DISCIPLINES = ["Industrial Designer", "Mechanical Engineer", "Electronics Engineer", "Embedded Systems", "Other"]
+
+const ACCEPT = UPLOAD_RULES.extensions.map((e) => `.${e}`).join(",")
+const RULES = {
+  maxFiles: UPLOAD_RULES.maxFiles,
+  maxBytes: UPLOAD_RULES.maxBytes,
+  extensions: UPLOAD_RULES.extensions,
+}
+const MAX_MB = Math.round(UPLOAD_RULES.maxBytes / 1024 / 1024)
+---
+
+<div class="cr-card">
+  <h2 class="cr-card__title" id="job-request-form">Job Request Form</h2>
+
+  <form class="cr-form" data-apply-form novalidate aria-labelledby="job-request-form">
+    {
+      /* Visible labels are the placeholders, as on the live form; the <label>s
+         are kept for assistive tech and for the error association. */
+    }
+    <div class="cr-form__row" data-gf="9">
+      <div class="cr-field">
+        <label class="sr-only" for="cr-first">First Name</label>
+        <input id="cr-first" name="firstName" placeholder="First Name" autocomplete="given-name" />
+      </div>
+      <div class="cr-field">
+        <label class="sr-only" for="cr-last">Last Name</label>
+        <input id="cr-last" name="lastName" placeholder="Last Name" autocomplete="family-name" />
+      </div>
+    </div>
+
+    <div class="cr-field" data-gf="1">
+      <label class="sr-only" for="cr-email">Email</label>
+      <input id="cr-email" name="email" type="email" placeholder="Email" autocomplete="email" inputmode="email" />
+    </div>
+
+    <div class="cr-field" data-gf="8">
+      <label class="sr-only" for="cr-phone">Phone</label>
+      <input id="cr-phone" name="phone" type="tel" placeholder="Phone" autocomplete="tel" />
+    </div>
+
+    <div class="cr-field" data-gf="11">
+      <label class="sr-only" for="cr-why">Why do you want to work at Design 1st? (required)</label>
+      <textarea
+        id="cr-why"
+        name="why"
+        rows="7"
+        placeholder="Why do you want to work at Design 1st? *"
+        required
+        aria-required="true"
+      ></textarea>
+    </div>
+
+    <fieldset class="cr-choices" data-gf="10">
+      <legend>Discipline</legend>
+      {
+        DISCIPLINES.map((d) => (
+          <label class="cr-choice">
+            <input type="checkbox" name="disciplines" value={d} />
+            <span>{d}</span>
+          </label>
+        ))
+      }
+    </fieldset>
+
+    <div class="cr-files" data-gf="3">
+      <p class="cr-files__label" id="cr-files-label">
+        Files <span class="cr-files__max">(Max {MAX_MB}MB)</span>
+      </p>
+      <div class="cr-drop" data-drop>
+        <svg class="cr-drop__icon" viewBox="0 0 64 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 40h-4a11 11 0 0 1-1.3-21.9A15 15 0 0 1 43.6 15 12 12 0 0 1 46 40h-4" />
+          <path d="M32 44V22m0 0-8 8m8-8 8 8" />
+        </svg>
+        <p class="cr-drop__text">
+          Drop files here or
+          <button type="button" class="cr-drop__browse" data-browse aria-describedby="cr-files-rules">select files</button>
+        </p>
+        <p class="cr-drop__rules" id="cr-files-rules">
+          {UPLOAD_RULES.extensions.map((e) => e.toUpperCase()).join(", ")}. Up to {UPLOAD_RULES.maxFiles} files, {MAX_MB} MB each.
+        </p>
+        <input type="file" data-file-input accept={ACCEPT} multiple hidden aria-labelledby="cr-files-label" />
+      </div>
+      <ul class="cr-files__list" data-file-list role="list"></ul>
+    </div>
+
+    {
+      /* Honeypot. Form #2's own decoy is the "X/Twitter" field; Gravity Forms
+         silently discards submissions that fill it and /api/apply does the
+         same. Off-screen rather than display:none so naive bots still see it. */
+    }
+    <div class="cr-form__hp" aria-hidden="true">
+      <label>
+        X/Twitter
+        <input type="text" name="honeypot" tabindex="-1" autocomplete="off" />
+      </label>
+    </div>
+
+    <button type="submit" class="cr-submit">Submit Your Application</button>
+    <p class="cr-form__status" data-status role="status" aria-live="polite"></p>
+  </form>
+
+  <div class="cr-done" data-done hidden tabindex="-1">
+    <h2 class="cr-done__title">Application received</h2>
+    <p class="cr-done__text" data-done-text></p>
+  </div>
+</div>
+
+<script is:inline define:vars={{ API, RULES }}>
+  ;(() => {
+    const root = document.querySelector("[data-apply-form]")
+    if (!root) return
+    const form = root
+    const status = form.querySelector("[data-status]")
+    const submit = form.querySelector("button[type=submit]")
+    const drop = form.querySelector("[data-drop]")
+    const browse = form.querySelector("[data-browse]")
+    const input = form.querySelector("[data-file-input]")
+    const list = form.querySelector("[data-file-list]")
+    const done = document.querySelector("[data-done]")
+
+    // Only on design1st.com is Gravity Forms' upload endpoint same-origin.
+    // Anywhere else, go through the proxy (4.5 MB cap — see /api/upload).
+    const DIRECT = location.hostname === "design1st.com"
+
+    // One id ties the temp files to the submission that claims them. Gravity
+    // Forms wants it alphanumeric; the widget's own is a 32-char hex string.
+    const uniqueId = Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) =>
+      b.toString(16).padStart(2, "0"),
+    ).join("")
+
+    const say = (state, text) => {
+      status.dataset.state = state
+      status.textContent = text
+    }
+    const fmtSize = (n) => (n < 1024 * 1024 ? `${Math.round(n / 1024)} KB` : `${(n / 1024 / 1024).toFixed(1)} MB`)
+    const ext = (name) => (name.match(/\.([a-z0-9]+)$/i)?.[1] || "").toLowerCase()
+
+    // ---- upload config -----------------------------------------------------
+    // Fetched once, the first time a file is added. It carries a nonce that is
+    // good for 24 hours, so a form left open overnight can still upload.
+    let config = null
+    const getConfig = async () => {
+      if (config) return config
+      const res = await fetch(`${API}/apply`, { cache: "no-store" })
+      const out = await res.json()
+      if (!out.ok) throw new Error(out.message || "Upload is unavailable right now.")
+      config = out
+      return config
+    }
+
+    // ---- files ---------------------------------------------------------------
+    /** @type {{file: File, li: HTMLElement, state: "uploading"|"done"|"error", pct: number, xhr?: XMLHttpRequest, temp_filename?: string, uploaded_filename?: string, promise: Promise<void>}[]} */
+    const files = []
+
+    const render = (entry) => {
+      const { li, file, state, pct } = entry
+      li.dataset.state = state
+      li.querySelector("[data-name]").textContent = file.name
+      li.querySelector("[data-size]").textContent = fmtSize(file.size)
+      const label = li.querySelector("[data-file-status]")
+      const bar = li.querySelector("[data-bar]")
+      if (state === "uploading") {
+        label.textContent = pct < 100 ? `Uploading… ${pct}%` : "Processing…"
+        bar.style.width = `${pct}%`
+      } else if (state === "done") {
+        label.textContent = "Attached"
+        bar.style.width = "100%"
+      } else {
+        label.textContent = entry.error || "Upload failed"
+        bar.style.width = "0"
+      }
+    }
+
+    const remove = (entry) => {
+      entry.xhr?.abort()
+      files.splice(files.indexOf(entry), 1)
+      entry.li.remove()
+      // A temp file left behind on the server is purged by Gravity Forms on its
+      // own schedule; the submission only claims the ones still listed here.
+    }
+
+    // The same multipart body plupload sends, minus plupload.
+    const upload = (entry) =>
+      new Promise(async (resolve) => {
+        let cfg
+        try {
+          cfg = await getConfig()
+        } catch (err) {
+          entry.state = "error"
+          entry.error = "Upload is unavailable right now"
+          render(entry)
+          return resolve()
+        }
+        const body = new FormData()
+        body.append("name", entry.file.name)
+        body.append("form_id", cfg.formId)
+        body.append("field_id", cfg.fieldId)
+        body.append("gform_unique_id", uniqueId)
+        if (DIRECT) body.append(`_gform_file_upload_nonce_${cfg.formId}_${cfg.fieldId}`, cfg.nonce)
+        body.append("file", entry.file, entry.file.name)
+
+        const xhr = new XMLHttpRequest()
+        entry.xhr = xhr
+        xhr.open("POST", DIRECT ? cfg.uploadUrl : `${API}/upload`)
+        xhr.upload.onprogress = (e) => {
+          if (!e.lengthComputable) return
+          entry.pct = Math.round((e.loaded / e.total) * 100)
+          render(entry)
+        }
+        xhr.onerror = () => {
+          entry.state = "error"
+          entry.error = "Upload failed — check your connection"
+          render(entry)
+          resolve()
+        }
+        xhr.onabort = () => resolve()
+        xhr.onload = () => {
+          let out = null
+          try {
+            out = JSON.parse(xhr.responseText)
+          } catch {}
+          if (xhr.status === 200 && out && out.status === "ok" && out.data?.temp_filename) {
+            entry.state = "done"
+            entry.temp_filename = out.data.temp_filename
+            entry.uploaded_filename = out.data.uploaded_filename || entry.file.name
+          } else {
+            entry.state = "error"
+            entry.error = out?.error?.message || `Upload failed (${xhr.status})`
+          }
+          render(entry)
+          resolve()
+        }
+        xhr.send(body)
+      })
+
+    const addFiles = (incoming) => {
+      say("", "")
+      for (const file of Array.from(incoming)) {
+        if (files.length >= RULES.maxFiles) {
+          say("error", `You can attach up to ${RULES.maxFiles} files.`)
+          break
+        }
+        if (!RULES.extensions.includes(ext(file.name))) {
+          say("error", `${file.name}: only ${RULES.extensions.map((e) => e.toUpperCase()).join(", ")} files are accepted.`)
+          continue
+        }
+        if (file.size > RULES.maxBytes) {
+          say("error", `${file.name} is larger than ${Math.round(RULES.maxBytes / 1024 / 1024)} MB.`)
+          continue
+        }
+        if (files.some((f) => f.file.name === file.name && f.file.size === file.size)) continue
+
+        const li = document.createElement("li")
+        li.className = "cr-file"
+        li.innerHTML =
+          '<span class="cr-file__name" data-name></span>' +
+          '<span class="cr-file__size" data-size></span>' +
+          '<span class="cr-file__status" data-file-status></span>' +
+          '<button type="button" class="cr-file__remove" aria-label="Remove file">&times;</button>' +
+          '<span class="cr-file__bar" aria-hidden="true"><span data-bar></span></span>'
+        const entry = { file, li, state: "uploading", pct: 0 }
+        li.querySelector("button").addEventListener("click", () => remove(entry))
+        list.appendChild(li)
+        files.push(entry)
+        render(entry)
+        entry.promise = upload(entry)
+      }
+      input.value = ""
+    }
+
+    browse.addEventListener("click", () => input.click())
+    input.addEventListener("change", () => addFiles(input.files))
+    ;["dragenter", "dragover"].forEach((t) =>
+      drop.addEventListener(t, (e) => {
+        e.preventDefault()
+        drop.classList.add("is-over")
+      }),
+    )
+    ;["dragleave", "drop"].forEach((t) =>
+      drop.addEventListener(t, (e) => {
+        e.preventDefault()
+        drop.classList.remove("is-over")
+      }),
+    )
+    drop.addEventListener("drop", (e) => addFiles(e.dataTransfer?.files || []))
+
+    // ---- submit --------------------------------------------------------------
+    // Gravity Forms field id → the block to flag. Server errors come back keyed
+    // by field id so the same map serves both local and WordPress validation.
+    const block = (id) => form.querySelector(`[data-gf="${id}"]`)
+    const clearErrors = () => {
+      form.querySelectorAll("[data-gf].is-invalid").forEach((el) => el.classList.remove("is-invalid"))
+      form.querySelectorAll("[aria-invalid]").forEach((el) => el.removeAttribute("aria-invalid"))
+      form.querySelectorAll(".cr-field__error").forEach((el) => el.remove())
+    }
+    const flag = (id, message) => {
+      const el = block(id)
+      if (!el) return
+      el.classList.add("is-invalid")
+      el.querySelectorAll("input:not([type=checkbox]), textarea").forEach((c) => c.setAttribute("aria-invalid", "true"))
+      if (message) {
+        const p = document.createElement("p")
+        p.className = "cr-field__error"
+        p.textContent = message
+        el.appendChild(p)
+      }
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault()
+      clearErrors()
+
+      const data = new FormData(form)
+      const why = String(data.get("why") || "").trim()
+      const email = String(data.get("email") || "").trim()
+      const local = {}
+      if (!why) local["11"] = "Please tell us why you want to work at Design 1st."
+      if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) local["1"] = "That doesn't look like an email address."
+      if (Object.keys(local).length) {
+        Object.entries(local).forEach(([id, msg]) => flag(id, msg))
+        say("error", "Please check the highlighted fields.")
+        block(Object.keys(local)[0])?.querySelector("input, textarea")?.focus()
+        return
+      }
+      if (files.some((f) => f.state === "error")) {
+        flag("3")
+        say("error", "One of your files didn't upload. Remove it, or try attaching it again.")
+        return
+      }
+
+      submit.disabled = true
+      if (files.some((f) => f.state === "uploading")) {
+        say("", "Finishing your file upload…")
+        await Promise.all(files.map((f) => f.promise))
+        if (files.some((f) => f.state !== "done")) {
+          submit.disabled = false
+          flag("3")
+          say("error", "One of your files didn't upload. Remove it, or try attaching it again.")
+          return
+        }
+      }
+
+      say("", "Sending…")
+      try {
+        const res = await fetch(`${API}/apply`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            firstName: data.get("firstName"),
+            lastName: data.get("lastName"),
+            email,
+            phone: data.get("phone"),
+            why,
+            disciplines: data.getAll("disciplines"),
+            files: files.map((f) => ({ temp_filename: f.temp_filename, uploaded_filename: f.uploaded_filename })),
+            uniqueId,
+            honeypot: data.get("honeypot"),
+          }),
+        })
+        const out = await res.json()
+        if (out.ok) {
+          say("", "")
+          form.hidden = true
+          done.querySelector("[data-done-text]").textContent = out.message
+          done.hidden = false
+          done.focus()
+          return
+        }
+        if (out.fieldErrors) {
+          Object.entries(out.fieldErrors).forEach(([id, msg]) => flag(id, msg))
+          block(Object.keys(out.fieldErrors)[0])?.querySelector("input, textarea")?.focus()
+        }
+        say("error", out.message)
+      } catch {
+        say("error", "Something went wrong. Please try again, or email info@design1st.com.")
+      } finally {
+        submit.disabled = false
+      }
+    })
+  })()
+</script>

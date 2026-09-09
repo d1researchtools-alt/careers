@@ -1,0 +1,250 @@
+---
+// Hand-written replacement for the Elementor header in src/chrome/chrome.json.
+//
+// Geometry matches the live design1st.com header measured at 1440 (118px tall:
+// 8px pad + 24px utility strip + 7px gap + 79px main row). Menu content lives in
+// nav-data.ts — edit there, not here.
+//
+// Links point at design1st.com because this app is only the /careers section;
+// every nav destination is a WordPress page on the parent site.
+import Icon from "@/components/ui/Icon.astro"
+import Button from "@/components/ui/Button.astro"
+import { nav } from "./nav-data"
+
+const WP = "https://design1st.com"
+const abs = (href: string) => (href.startsWith("http") ? href : `${WP}${href}`)
+const asset = (p: string) => `${import.meta.env.BASE_URL.replace(/\/$/, "")}/${p}`
+---
+
+<header class="d1-header">
+  <div class="d1-container">
+    <div class="d1-util">
+      <a href={`${WP}/?s=`} class="d1-util__search">
+        <Icon name="search" class="d1-util__icon" />
+        <span class="d1-util__label">Search</span>
+      </a>
+      <span class="d1-util__sep" aria-hidden="true">&bull;</span>
+      <a href="tel:1.877.235.1004">
+        <Icon name="phoneAlt" class="d1-util__icon" />
+        <span class="d1-util__label d1-util__label--keep">1.877.235.1004</span>
+      </a>
+      <span class="d1-util__sep" aria-hidden="true">&bull;</span>
+      <a href={abs("/contact")}>
+        <Icon name="commentAlt" class="d1-util__icon" />
+        <span class="d1-util__label">Contact Us</span>
+      </a>
+    </div>
+
+    <div class="d1-bar">
+      <a href={WP} class="d1-logo" aria-label="Design 1st — home">
+        <img src={asset("chrome/logo-header.png")} width="158" height="27" alt="Design 1st" />
+      </a>
+
+      <nav aria-label="Main">
+        <ul class="d1-nav">
+          {
+            nav.map((item) => (
+              <li class:list={["d1-nav__item", item.kind === "list" && "d1-nav__item--list"]} data-nav-item>
+                <button type="button" class="d1-nav__link" aria-expanded="false" aria-haspopup="true" data-nav-trigger>
+                  {item.label}
+                  <Icon name="chevronDown" class="d1-nav__chev" />
+                </button>
+
+                {item.kind === "mega" ? (
+                  <div
+                    class:list={["d1-panel", `d1-panel--${item.label.toLowerCase().replace(/\W+/g, "-")}`]}
+                    data-nav-panel
+                    hidden
+                  >
+                    <div class="d1-panel__grid">
+                      {item.columns.map((col) => (
+                        <div class="d1-panel__col">
+                          <p class="d1-panel__heading">{col.heading}</p>
+
+                          {/* Portfolio-style column: one icon per link, no groups. */}
+                          {col.links.length > 0 && (
+                            <ul class="d1-iconlist">
+                              {col.links.map((l) => (
+                                <li>
+                                  <a href={abs(l.href)}>
+                                    {l.icon && (
+                                      <img
+                                        src={asset(`chrome/menu-icons/${l.icon}`)}
+                                        alt=""
+                                        width="22"
+                                        height="22"
+                                        loading="lazy"
+                                        decoding="async"
+                                      />
+                                    )}
+                                    <span>{l.label}</span>
+                                  </a>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+
+                          {col.cards.map((card) => (
+                            <a class="d1-card-link" href={abs(card.href)}>
+                              {card.image && (
+                                <img src={card.image} alt="" width="80" height="60" loading="lazy" decoding="async" />
+                              )}
+                              <span>
+                                <strong>{card.title}</strong>
+                                {card.description && <em>{card.description}</em>}
+                              </span>
+                            </a>
+                          ))}
+
+                          {col.groups.map((g) => (
+                            <div class="d1-group">
+                              <a class="d1-group__title" href={abs(g.href)}>
+                                {g.icon && (
+                                  <img
+                                    class="d1-group__icon"
+                                    src={asset(`chrome/menu-icons/${g.icon}`)}
+                                    alt=""
+                                    width="26"
+                                    height="26"
+                                    loading="lazy"
+                                    decoding="async"
+                                  />
+                                )}
+                                <span>{g.label}</span>
+                              </a>
+                              {g.links.length > 0 && (
+                                <ul class="d1-group__links">
+                                  {g.links.map((l) => (
+                                    <li>
+                                      <a href={abs(l.href)}>{l.label}</a>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+
+                      {(item.promo.cta || item.promo.buttons.length > 0) && (
+                        <div class="d1-panel__col d1-promo">
+                          <p class="d1-panel__heading">How we help</p>
+                          {item.promo.text && <p class="d1-promo__text">{item.promo.text}</p>}
+                          {item.promo.cta && (
+                            <a class="d1-promo__cta" href={abs(item.promo.cta.href)}>
+                              {item.promo.cta.label}
+                            </a>
+                          )}
+                          {item.promo.buttons.map((btn) => (
+                            <a class="d1-promo__btn" href={abs(btn.href)}>
+                              {btn.label}
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div class="d1-panel d1-panel--list" data-nav-panel hidden>
+                    <ul class="d1-panel__list">
+                      {item.links.map((l) => (
+                        <li>
+                          <a href={abs(l.href)}>{l.label}</a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+
+      <div class="d1-cta">
+        <Button variant="ghost" data-open-form="email">Email a Question</Button>
+        <Button variant="solid" arrow data-open-form="talk">Talk to us</Button>
+      </div>
+
+      <button type="button" class="d1-burger" aria-expanded="false" aria-label="Menu" data-burger>
+        <Icon name="bars" />
+      </button>
+    </div>
+  </div>
+</header>
+
+<script>
+  // Dropdown + mobile menu. Replaces the smartmenus/bdt-uikit/jQuery chain the
+  // Elementor header needed.
+  //
+  // The live menus open on HOVER, so these do too — but hover alone would make
+  // them unreachable by keyboard and unusable on touch, so click/focus open them
+  // as well. A short close delay keeps the menu from vanishing while the pointer
+  // crosses the gap between the trigger and the panel.
+  const items = document.querySelectorAll<HTMLElement>("[data-nav-item]")
+  const HOVER_CLOSE_DELAY = 180
+  let closeTimer: number | undefined
+
+  const setOpen = (li: HTMLElement, open: boolean) => {
+    li.dataset.open = String(open)
+    li.querySelector("[data-nav-trigger]")?.setAttribute("aria-expanded", String(open))
+    li.querySelector<HTMLElement>("[data-nav-panel]")?.toggleAttribute("hidden", !open)
+  }
+
+  const closeAll = (except?: Element) => {
+    items.forEach((li) => li !== except && setOpen(li, false))
+  }
+
+  const open = (li: HTMLElement) => {
+    window.clearTimeout(closeTimer)
+    closeAll(li)
+    setOpen(li, true)
+  }
+
+  const scheduleClose = () => {
+    window.clearTimeout(closeTimer)
+    closeTimer = window.setTimeout(() => closeAll(), HOVER_CLOSE_DELAY)
+  }
+
+  items.forEach((li) => {
+    const trigger = li.querySelector<HTMLButtonElement>("[data-nav-trigger]")
+    if (!trigger) return
+
+    // Pointer, but only for devices that actually hover — on touch, `mouseenter`
+    // fires on tap and would open then immediately re-close.
+    li.addEventListener("mouseenter", () => {
+      if (window.matchMedia("(hover: hover)").matches) open(li)
+    })
+    li.addEventListener("mouseleave", () => {
+      if (window.matchMedia("(hover: hover)").matches) scheduleClose()
+    })
+
+    // Keyboard and touch.
+    trigger.addEventListener("click", (e) => {
+      e.preventDefault()
+      li.dataset.open === "true" ? closeAll() : open(li)
+    })
+    li.addEventListener("focusin", () => open(li))
+  })
+
+  document.addEventListener("click", (e) => {
+    if (!(e.target as Element)?.closest?.("[data-nav-item]")) closeAll()
+  })
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return
+    const openItem = [...items].find((li) => li.dataset.open === "true")
+    closeAll()
+    openItem?.querySelector<HTMLButtonElement>("[data-nav-trigger]")?.focus()
+  })
+  document.addEventListener("focusout", (e) => {
+    const next = e.relatedTarget as Element | null
+    if (next && !next.closest("[data-nav-item]")) closeAll()
+  })
+
+  const burger = document.querySelector<HTMLButtonElement>("[data-burger]")
+  burger?.addEventListener("click", () => {
+    const open = burger.getAttribute("aria-expanded") === "true"
+    burger.setAttribute("aria-expanded", String(!open))
+    document.querySelector(".d1-header")?.classList.toggle("is-menu-open", !open)
+  })
+</script>

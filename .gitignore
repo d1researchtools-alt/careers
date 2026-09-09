@@ -1,0 +1,29 @@
+node_modules/
+dist/
+.astro/
+.vercel/
+.env
+.env.local
+.DS_Store
+
+# Generated visual-diff output from scripts/compare-chrome.mjs.
+# Note `artifacts/*`, not `artifacts/` — git does not descend into an ignored
+# directory, so a directory-level ignore makes the negations below unreachable.
+artifacts/*
+
+# ...except the measurement dumps that src/styles/chrome.css cites. Copied from
+# the insights repo; regenerate there with `npm run chrome:tokens`.
+!artifacts/layout-*.json
+!artifacts/tokens-*.json
+
+# Image sources fetched by scripts/optimise-images.mjs and optimise-badges.mjs
+# (base64-PNG-in-SVG from WordPress, ~8 MB for the careers set). Only the
+# optimised .webp output under public/ is committed.
+artifacts/badge-src/
+artifacts/careers-src/
+
+# Playwright output from scripts/smoke/*.mjs
+shot-*.png
+
+# Written by scripts/smoke/apply.mjs
+smoke-test.pdf

@@ -1,0 +1,517 @@
+---
+// The two popups behind the header CTAs, rebuilt from the Elementor/Gravity
+// Forms originals.
+//
+// Flow reverse-engineered from the live site's inline jQuery block:
+//   "Talk to us"        -> 3-card business-type chooser
+//                            card 1 (Established Company) -> Calendly inline widget
+//                            card 2 (Funded Start-up)     -> Calendly inline widget
+//                            card 3 (Entrepreneur/Other)  -> the contact form
+//   "Email a Question"  -> the contact form directly
+//
+// So most "Talk to us" traffic books a meeting and never touches Gravity Forms.
+// Only the Entrepreneur path and the whole Email path submit, and both go
+// through /api/contact (server-side proxy) so we can report success/failure —
+// a cross-origin POST straight to WordPress would be unreadable by the browser.
+import Icon from "@/components/ui/Icon.astro"
+import Button from "@/components/ui/Button.astro"
+
+const CALENDLY = "https://calendly.com/design1st/30min-consultation?hide_gdpr_banner=1&primary_color=ff6600"
+
+// The app is mounted under a base path (/careers in production), so the API
+// route has to be resolved against it rather than the page URL.
+const API = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/api/contact`
+
+const CARDS = [
+  {
+    title: "An Established Company",
+    blurb: "We have a new product idea or need a product refresh.",
+    action: "calendly",
+  },
+  {
+    title: "A Funded Start-up",
+    blurb: "We need an experienced team to scope, budget, and build.",
+    action: "calendly",
+  },
+  {
+    title: "Entrepreneur or Other",
+    blurb: "I have a product idea I want to take to market.",
+    action: "form",
+  },
+] as const
+
+const LOCATIONS = ["United States", "Canada", "International"]
+
+const EXTRAS = [
+  "Would you like us to reach out to you to discuss things further?",
+  "Would you like info on design of physical products?",
+  "Do you require assistance to get manufacturing setup?",
+  "Would you like a list of funding sources?",
+]
+---
+
+<div class="d1-modal" data-modal hidden>
+  <div class="d1-modal__backdrop" data-modal-close></div>
+
+  <div class="d1-modal__panel" role="dialog" aria-modal="true" aria-labelledby="d1-modal-title">
+    <button type="button" class="d1-modal__close" data-modal-close aria-label="Close">&times;</button>
+
+    <!-- Step 1: business-type chooser. "Talk to us" only. -->
+    <section class="d1-step" data-step="choose">
+      <p class="d1-step__kicker">Talk to us</p>
+      <h2 class="d1-step__title" id="d1-modal-title">Which Best Describes Your Business?</h2>
+      <div class="d1-cards">
+        {
+          CARDS.map((card, i) => (
+            <button type="button" class="d1-card" data-card data-action={card.action} data-index={i + 1}>
+              <span class="d1-card__check" aria-hidden="true"></span>
+              <span class="d1-card__title">{card.title}</span>
+              <span class="d1-card__blurb">{card.blurb}</span>
+            </button>
+          ))
+        }
+      </div>
+      <Button variant="solid" arrow class="d1-step__next" data-next disabled>
+        Book a Meeting
+      </Button>
+    </section>
+
+    <!-- Step 2a: Calendly. The widget script is only fetched once we get here. -->
+    <section class="d1-step" data-step="booking" hidden>
+      <p class="d1-step__kicker">Please select a meeting time that works best for you:</p>
+      <div class="d1-calendly" data-calendly></div>
+    </section>
+
+    <!-- Step 2b: the contact form. -->
+    <section class="d1-step" data-step="form" hidden>
+      <h2 class="d1-step__title" data-form-title>Tell us more about your project needs.</h2>
+
+      <form class="d1-form" data-contact-form novalidate>
+        <div class="d1-form__row">
+          <input name="firstName" placeholder="First Name" autocomplete="given-name" required />
+          <input name="lastName" placeholder="Last Name" autocomplete="family-name" />
+        </div>
+        <input name="email" type="email" placeholder="Email" autocomplete="email" required />
+        <input name="company" placeholder="Company Name" autocomplete="organization" />
+        <select name="location">
+          <option value="">Your Location</option>
+          {LOCATIONS.map((l) => <option value={l}>{l}</option>)}
+        </select>
+        <input name="phone" type="tel" placeholder="Phone Number" autocomplete="tel" required />
+        <textarea
+          name="message"
+          rows="4"
+          placeholder="Tell us more about what you are looking for, and how we can help."
+        ></textarea>
+
+        <fieldset class="d1-form__extras" data-extras>
+          <legend>Anything else we can help with?</legend>
+          {
+            EXTRAS.map((label, i) => (
+              <label>
+                <input type="checkbox" name={`additional${i + 1}`} />
+                <span>{label}</span>
+              </label>
+            ))
+          }
+        </fieldset>
+
+        {
+          /* Honeypot. Gravity Forms silently discards submissions that fill this;
+             we mirror that server-side. Off-screen rather than display:none so
+             naive bots still see it. */
+        }
+        <div class="d1-form__hp" aria-hidden="true">
+          <label>
+            Company
+            <input type="text" name="honeypot" tabindex="-1" autocomplete="off" />
+          </label>
+        </div>
+
+        <p class="d1-form__note">
+          Please Note: Project budgets rarely start below $10,000. Typical ranges are $50,000&ndash;$500,000
+          depending on complexity, with timelines of 9&ndash;12 months. We are a fee-for-service company,
+          billing monthly with a deposit required to begin.
+        </p>
+
+        <Button variant="solid" type="submit">Send</Button>
+        <p class="d1-form__status" data-status role="status" aria-live="polite"></p>
+      </form>
+    </section>
+  </div>
+</div>
+
+<style>
+  .d1-modal[hidden] {
+    display: none;
+  }
+
+  .d1-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .d1-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgb(0 0 0 / 55%);
+  }
+
+  .d1-modal__panel {
+    position: relative;
+    background: #fff;
+    border-radius: 8px;
+    width: min(100%, 640px);
+    max-height: min(90vh, 900px);
+    overflow-y: auto;
+    padding: 32px;
+    font-family: var(--d1-font);
+    color: var(--d1-body);
+  }
+
+  .d1-modal__panel.is-wide {
+    width: min(100%, 1000px);
+  }
+
+  .d1-modal__close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: 0;
+    font-size: 28px;
+    line-height: 1;
+    color: var(--d1-body);
+    cursor: pointer;
+  }
+
+  .d1-step[hidden] {
+    display: none;
+  }
+
+  .d1-step__kicker {
+    margin: 0 0 4px;
+    font-size: 15px;
+    color: var(--d1-body);
+  }
+
+  .d1-step__title {
+    margin: 0 0 24px;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--d1-ink);
+  }
+
+  .d1-cards {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .d1-card {
+    display: grid;
+    grid-template-columns: 24px 1fr;
+    gap: 4px 12px;
+    text-align: left;
+    padding: 16px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .d1-card__check {
+    grid-row: span 2;
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    border: 2px solid #ccc;
+    border-radius: 50%;
+  }
+
+  .d1-card[aria-pressed="true"] {
+    border-color: var(--d1-orange);
+  }
+
+  .d1-card[aria-pressed="true"] .d1-card__check {
+    border-color: var(--d1-orange);
+    background:
+      radial-gradient(circle, var(--d1-orange) 0 5px, transparent 5px);
+  }
+
+  .d1-card__title {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--d1-ink);
+  }
+
+  .d1-card__blurb {
+    font-size: 15px;
+    line-height: 22px;
+  }
+
+  .d1-step__next[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .d1-calendly {
+    min-height: 620px;
+  }
+
+  .d1-form {
+    display: grid;
+    gap: 12px;
+  }
+
+  .d1-form__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .d1-form input,
+  .d1-form select,
+  .d1-form textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 16px;
+    font-size: 15px;
+    font-family: inherit;
+    color: #666;
+    background: #fafafa;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+
+  .d1-form select {
+    background: #fff;
+  }
+
+  .d1-form input:focus-visible,
+  .d1-form select:focus-visible,
+  .d1-form textarea:focus-visible {
+    outline: 2px solid var(--d1-orange);
+    outline-offset: 1px;
+  }
+
+  .d1-form input[aria-invalid="true"] {
+    border-color: #c00;
+  }
+
+  .d1-form__extras {
+    border: 0;
+    padding: 0;
+    margin: 4px 0;
+    display: grid;
+    gap: 8px;
+  }
+
+  .d1-form__extras legend {
+    padding: 0 0 8px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--d1-ink);
+  }
+
+  .d1-form__extras label {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px;
+    align-items: start;
+    font-size: 15px;
+    line-height: 22px;
+  }
+
+  .d1-form__extras input {
+    width: auto;
+    margin-top: 4px;
+  }
+
+  /* Off-screen, not display:none — a bot that only checks visibility still
+     fills it, which is the point. */
+  .d1-form__hp {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .d1-form__note {
+    margin: 4px 0;
+    font-size: 13px;
+    line-height: 20px;
+    color: #6b7280;
+  }
+
+  .d1-form__status:empty {
+    display: none;
+  }
+
+  .d1-form__status {
+    margin: 0;
+    font-size: 15px;
+  }
+
+  .d1-form__status[data-state="error"] {
+    color: #c00;
+  }
+
+  .d1-form__status[data-state="ok"] {
+    color: #1e7a4a;
+  }
+
+  @media (max-width: 600px) {
+    .d1-modal__panel {
+      padding: 24px 16px;
+    }
+
+    .d1-form__row {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<script is:inline define:vars={{ CALENDLY, API }}>
+  ;(() => {
+    const modal = document.querySelector("[data-modal]")
+    if (!modal) return
+    const panel = modal.querySelector(".d1-modal__panel")
+    const steps = modal.querySelectorAll("[data-step]")
+    const nextBtn = modal.querySelector("[data-next]")
+    const form = modal.querySelector("[data-contact-form]")
+    const status = modal.querySelector("[data-status]")
+    const extras = modal.querySelector("[data-extras]")
+
+    let activeForm = "talk"
+    let choice = 0
+    let lastFocused = null
+
+    const show = (name) => {
+      steps.forEach((s) => s.toggleAttribute("hidden", s.dataset.step !== name))
+      panel.classList.toggle("is-wide", name === "booking")
+    }
+
+    const open = (which) => {
+      activeForm = which
+      choice = 0
+      lastFocused = document.activeElement
+      modal.hidden = false
+      document.body.style.overflow = "hidden"
+      status.textContent = ""
+      modal.querySelectorAll("[data-card]").forEach((c) => c.setAttribute("aria-pressed", "false"))
+      nextBtn.disabled = true
+      // The extra checkboxes only exist on form 28 ("Talk to us").
+      extras.hidden = which !== "talk"
+      show(which === "talk" ? "choose" : "form")
+      panel.querySelector("button, input, select, textarea")?.focus()
+    }
+
+    const close = () => {
+      modal.hidden = true
+      document.body.style.overflow = ""
+      lastFocused?.focus?.()
+    }
+
+    document.querySelectorAll("[data-open-form]").forEach((btn) => {
+      btn.addEventListener("click", () => open(btn.dataset.openForm))
+    })
+    modal.querySelectorAll("[data-modal-close]").forEach((el) => el.addEventListener("click", close))
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !modal.hidden) close()
+    })
+
+    modal.querySelectorAll("[data-card]").forEach((card) => {
+      card.addEventListener("click", () => {
+        modal.querySelectorAll("[data-card]").forEach((c) => c.setAttribute("aria-pressed", "false"))
+        card.setAttribute("aria-pressed", "true")
+        choice = Number(card.dataset.index)
+        nextBtn.disabled = false
+      })
+    })
+
+    // Calendly's widget is ~40 KB; only load it if someone actually books.
+    let calendlyLoading = null
+    const loadCalendly = () => {
+      if (window.Calendly) return Promise.resolve()
+      if (calendlyLoading) return calendlyLoading
+      calendlyLoading = new Promise((resolve, reject) => {
+        const css = document.createElement("link")
+        css.rel = "stylesheet"
+        css.href = "https://assets.calendly.com/assets/external/widget.css"
+        document.head.appendChild(css)
+        const js = document.createElement("script")
+        js.src = "https://assets.calendly.com/assets/external/widget.js"
+        js.onload = resolve
+        js.onerror = reject
+        document.head.appendChild(js)
+      })
+      return calendlyLoading
+    }
+
+    nextBtn.addEventListener("click", async () => {
+      const card = modal.querySelector(`[data-card][data-index="${choice}"]`)
+      if (!card) return
+      if (card.dataset.action === "form") {
+        show("form")
+        return
+      }
+      show("booking")
+      const host = modal.querySelector("[data-calendly]")
+      host.innerHTML = ""
+      try {
+        await loadCalendly()
+        window.Calendly.initInlineWidget({ url: CALENDLY, parentElement: host })
+      } catch {
+        host.innerHTML =
+          '<p>Could not load the booking calendar. Please email <a href="mailto:info@design1st.com">info@design1st.com</a>.</p>'
+      }
+    })
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault()
+      const data = Object.fromEntries(new FormData(form).entries())
+      data.form = activeForm
+
+      // Mirror Gravity Forms' required fields before spending a round trip.
+      const missing = ["firstName", "email", "phone"].filter((k) => !String(data[k] ?? "").trim())
+      form.querySelectorAll("[aria-invalid]").forEach((el) => el.removeAttribute("aria-invalid"))
+      if (missing.length) {
+        missing.forEach((k) => form.elements[k]?.setAttribute("aria-invalid", "true"))
+        status.dataset.state = "error"
+        status.textContent = "Please fill in your name, email and phone number."
+        form.elements[missing[0]]?.focus()
+        return
+      }
+
+      const submit = form.querySelector("button[type=submit]")
+      submit.disabled = true
+      status.dataset.state = ""
+      status.textContent = "Sending…"
+      try {
+        const res = await fetch(API, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(data),
+        })
+        const out = await res.json()
+        status.dataset.state = out.ok ? "ok" : "error"
+        status.textContent = out.message
+        if (out.ok) form.reset()
+      } catch {
+        status.dataset.state = "error"
+        status.textContent = "Something went wrong. Please email info@design1st.com."
+      } finally {
+        submit.disabled = false
+      }
+    })
+  })()
+</script>

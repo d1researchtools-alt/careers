@@ -1,0 +1,139 @@
+---
+// Hand-written replacement for the Elementor footer in src/chrome/chrome.json.
+//
+// Only the *visible* footer is reproduced here. The 71 KB snapshot footer also
+// carried two Gravity Forms, but those render as hidden popups triggered from
+// the header CTAs — they are not part of the footer's visual box. They live in
+// ContactModals.astro.
+import Icon from "@/components/ui/Icon.astro"
+import { footerGroups, social, badges } from "./nav-data"
+
+const WP = "https://design1st.com"
+const abs = (href: string) => (href.startsWith("http") ? href : `${WP}${href}`)
+const asset = (p: string) => `${import.meta.env.BASE_URL.replace(/\/$/, "")}/${p}`
+const year = new Date().getFullYear()
+---
+
+<footer class="d1-footer">
+  <section class="d1-footer__main">
+    <div class="d1-container">
+      <div class="d1-footer__cols">
+        {
+          footerGroups.map((group) => (
+            <div class="d1-footer__group">
+              {group.headingHref ? (
+                <h2><a href={abs(group.headingHref)}>{group.heading}</a></h2>
+              ) : (
+                <h2>{group.heading}</h2>
+              )}
+              {/* Two independent lists rather than one grid: a shared grid ties
+                  the two columns to the same row heights, so a wrapped label on
+                  the left pushes the right-hand column down. */}
+              <div class="d1-footer__pair">
+                <ul class="d1-footer__links">
+                  {group.links.slice(0, group.splitAt).map((l) => (
+                    <li>
+                      <a href={abs(l.href)}>{l.label}</a>
+                    </li>
+                  ))}
+                  {/* Links that move into this column only at tablet. */}
+                  {group.links.slice(group.splitAt, group.tabletSplitAt).map((l) => (
+                    <li class="d1-tablet-only">
+                      <a href={abs(l.href)}>{l.label}</a>
+                    </li>
+                  ))}
+                </ul>
+                <ul class="d1-footer__links">
+                  {group.links.slice(group.splitAt).map((l, i) => (
+                    <li class={i < group.tabletSplitAt - group.splitAt ? "d1-tablet-hide" : undefined}>
+                      <a href={abs(l.href)}>{l.label}</a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          ))
+        }
+
+        <div class="d1-footer__group d1-contact">
+          <h2>Contact Us</h2>
+          <div class="d1-footer__pair">
+            <div>
+              <div class="d1-contact__row d1-contact__row--label">
+                <Icon name="mapMarkerAlt" />
+                <span class="d1-contact__title">Head Office</span>
+              </div>
+              <address>
+                1840 Woodward Dr<br />
+                Ottawa, Ontario<br />
+                K2C 0P7<br />
+                Canada
+              </address>
+            </div>
+            <div>
+              <div class="d1-contact__row">
+                <Icon name="phoneAlt" />
+                <a href="tel:+18772351004">+1.877.235.1004</a>
+              </div>
+              <div class="d1-contact__row">
+                <Icon name="phoneAlt" />
+                <a href="tel:+16132351004">+1.613.235.1004</a>
+              </div>
+              <div class="d1-contact__row">
+                <Icon name="envelope" />
+                <a href="mailto:info@design1st.com">info@design1st.com</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="d1-footer__badges">
+    <div class="d1-container">
+      <div class="d1-badges">
+        <div class="d1-clutch">
+          <img src={asset("chrome/clutch.svg")} width="80" height="24" alt="Clutch" />
+          <div class="d1-rating">
+            <span>4.8</span>
+            <span class="d1-rating__stars" aria-label="4.8 out of 5">
+              {Array.from({ length: 5 }, () => <Icon name="star" />)}
+            </span>
+          </div>
+        </div>
+
+        {
+          /* Below the fold and ~1.1 MB all told, so these load lazily — they
+             must never compete with the article's LCP image. */
+          badges.map((b) => (
+            <img
+              class="d1-badge"
+              src={asset(`chrome/badges/${b.file}`)}
+              width={b.w}
+              height={b.h}
+              alt={b.alt}
+              loading="lazy"
+              decoding="async"
+            />
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <div class="d1-footer__bar">
+    <div class="d1-container">
+      <span class="d1-copyright">&copy; {year} Design 1st. All Rights Reserved.</span>
+      <div class="d1-social">
+        {
+          social.map((s) => (
+            <a href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.label}>
+              <Icon name={s.icon} label={s.label} />
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</footer>

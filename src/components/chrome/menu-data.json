@@ -1,0 +1,847 @@
+[
+  {
+    "label": "Services",
+    "kind": "mega",
+    "columns": [
+      {
+        "heading": "designing",
+        "groups": [
+          {
+            "label": "Product Strategy",
+            "href": "/product-plan/",
+            "icon": "product-strategy.svg",
+            "links": [
+              {
+                "label": "Design Strategy",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Requirements Review",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Risk Assessment",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Portfolio Planning",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Product/Market Fit",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Competitive Analysis",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Pitch Deck Support",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Demo Model",
+                "href": "#",
+                "icon": null
+              }
+            ]
+          },
+          {
+            "label": "Industrial Design",
+            "href": "/industrial-design/",
+            "icon": "industrial-design.svg",
+            "links": [
+              {
+                "label": "Product Concept Creation",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "User Interaction Design",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "MMI interface specification",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Human factors, ergonomics",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Labelling, aesthetics, color",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Models, renders, videos",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Packaging Design",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Accessory Design",
+                "href": "#",
+                "icon": null
+              }
+            ]
+          },
+          {
+            "label": "human factors",
+            "href": "/embedded-software/",
+            "icon": "human-factors.svg",
+            "links": [
+              {
+                "label": "Form/function 3D design",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "User Interaction Design",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "MMI interface specification",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Human factors, ergonomics",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Labelling, aesthetics, color",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Models, renders, videos",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Packaging Design",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Accessory Design",
+                "href": "#",
+                "icon": null
+              }
+            ]
+          }
+        ],
+        "links": [],
+        "cards": []
+      },
+      {
+        "heading": "engineering",
+        "groups": [
+          {
+            "label": "Mechanical",
+            "href": "/mechanical-engineering/",
+            "icon": "mechanical.svg",
+            "links": [
+              {
+                "label": "3D CAD Structure",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Part/Material Selection",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Mechanism Design",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Analysis, Simulation",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Testing and Material Review",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Reverse Engineering",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Engineering Risk Assessment",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Manufacture Feasibility",
+                "href": "#",
+                "icon": null
+              }
+            ]
+          },
+          {
+            "label": "Electronics",
+            "href": "/electronic-design-services/",
+            "icon": "electronics.svg",
+            "links": [
+              {
+                "label": "Circuit Board Design",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Power, FPGA, RF",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Sensor/motor/control",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Gesture and Touch Interfaces",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Battery and Power Design",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Wireless Connectivity",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Breadboard Prototyping",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Connected IoT Device",
+                "href": "#",
+                "icon": null
+              }
+            ]
+          },
+          {
+            "label": "Software",
+            "href": "/embedded-software/",
+            "icon": "software.svg",
+            "links": [
+              {
+                "label": "Advanced Sensor Integration",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Edge AI Intelligence",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Mesh Networking",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Short Range Wireless",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Device Driver Development",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Real-Time-Operating Systems",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "IoT Smart Device Connectivity",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Software Test and Debug",
+                "href": "#",
+                "icon": null
+              }
+            ]
+          }
+        ],
+        "links": [],
+        "cards": []
+      },
+      {
+        "heading": "prototyping",
+        "groups": [
+          {
+            "label": "Model builds",
+            "href": "/prototype-manufacturing-services/",
+            "icon": "model-builds.svg",
+            "links": [
+              {
+                "label": "Procure And Inspect Parts",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Rapid Prototyping",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Verify Part Function Specs",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Alpha Prototype Builds",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Test Interface Prototype",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Virtual Prototype Simulations",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Bench Model Build",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Onsite Prototyping Creation",
+                "href": "#",
+                "icon": null
+              }
+            ]
+          },
+          {
+            "label": "Evaluation and Test",
+            "href": "/prototype-manufacturing-services",
+            "icon": "evaluation-and-test.svg",
+            "links": [
+              {
+                "label": "Model and prototype testing",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "3rd party test coordination",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Stress, thermal, flow",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Failure mode assessment",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Feature de-bug",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Refine quality specifications",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Manufacturing Instructions",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "QMS regulatory documents",
+                "href": "#",
+                "icon": null
+              }
+            ]
+          },
+          {
+            "label": "Part Sourcing",
+            "href": "/manufacturing/",
+            "icon": "part-sourcing.svg",
+            "links": [
+              {
+                "label": "Supply Strategy Plan",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "3rd party test coordination",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Source and Qualify Suppliers",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Failure mode assessment",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Feature de-bug",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Design Transfer",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Refine quality specifications",
+                "href": "#",
+                "icon": null
+              },
+              {
+                "label": "Product Quality Review",
+                "href": "#",
+                "icon": null
+              }
+            ]
+          }
+        ],
+        "links": [],
+        "cards": []
+      }
+    ],
+    "promo": {
+      "text": "We are specialists in the development of technically-challenging useful and innovative products.",
+      "cta": {
+        "label": "More On Our Services",
+        "href": "/our-service/"
+      },
+      "buttons": [
+        {
+          "label": "Companies\nWith Design Teams",
+          "href": "/established-company/"
+        },
+        {
+          "label": "Companies and Startups\nWIthout Design Teams",
+          "href": "/startup-hw-dev/"
+        },
+        {
+          "label": "Entrepreneurs\nWith a Product Concept",
+          "href": "/entrepreneur/"
+        },
+        {
+          "label": "View Our Portfolio",
+          "href": "/portfolio-industry/"
+        },
+        {
+          "label": "Development Process",
+          "href": "/product-development-process/"
+        }
+      ]
+    }
+  },
+  {
+    "label": "Portfolio",
+    "kind": "mega",
+    "columns": [
+      {
+        "heading": "by Industry",
+        "groups": [],
+        "links": [
+          {
+            "label": "See All Projects",
+            "href": "/portfolio-industry",
+            "icon": "see-all-projects.svg"
+          },
+          {
+            "label": "Mining Equipment",
+            "href": "/portfolio-industry/mining-equipment/",
+            "icon": "mining-equipment.svg"
+          },
+          {
+            "label": "Smart Devices",
+            "href": "/portfolio/mytrak-smart-fitness-monitor/",
+            "icon": "smart-devices.svg"
+          },
+          {
+            "label": "Medical Devices",
+            "href": "/portfolio-industry/medical-devices/",
+            "icon": "medical-devices.svg"
+          },
+          {
+            "label": "Cleantech",
+            "href": "/portfolio-industry/cleantech/",
+            "icon": "cleantech.svg"
+          },
+          {
+            "label": "Health and Wellness",
+            "href": "/portfolio-industry/health/",
+            "icon": "health-and-wellness.svg"
+          },
+          {
+            "label": "Consumer",
+            "href": "/portfolio-industry/consumer/",
+            "icon": "consumer.svg"
+          },
+          {
+            "label": "Telecom",
+            "href": "/portfolio-industry/telecom/",
+            "icon": "telecom.svg"
+          },
+          {
+            "label": "Commercial",
+            "href": "/portfolio-industry/commercial/",
+            "icon": "commercial.svg"
+          },
+          {
+            "label": "Smart Office",
+            "href": "/portfolio-industry/smart-office/",
+            "icon": "smart-office.svg"
+          },
+          {
+            "label": "Sexual Wellness",
+            "href": "/portfolio-industry/adult-toy/",
+            "icon": "sexual-wellness.svg"
+          }
+        ],
+        "cards": []
+      },
+      {
+        "heading": "by Technology",
+        "groups": [],
+        "links": [
+          {
+            "label": "See All Technologies",
+            "href": "/portfolio-technology",
+            "icon": "see-all-technologies.svg"
+          },
+          {
+            "label": "Air Flow and Filtration",
+            "href": "/portfolio-technology/airflow-filtration/",
+            "icon": "air-flow-and-filtration.svg"
+          },
+          {
+            "label": "Audio Design",
+            "href": "/portfolio-technology/audio-design-engineering/",
+            "icon": "audio-design.svg"
+          },
+          {
+            "label": "Body-Worn Wearables",
+            "href": "/portfolio-technology/body-worn-wearables/",
+            "icon": "body-worn-wearables.svg"
+          },
+          {
+            "label": "Fluid Dynamics",
+            "href": "/portfolio-technology/fluid-dynamics/",
+            "icon": "fluid-dynamics.svg"
+          },
+          {
+            "label": "Mechanisms and Robotics",
+            "href": "/portfolio-technology/robotics-mechanisms/",
+            "icon": "mechanisms-and-robotics.svg"
+          },
+          {
+            "label": "Soft Goods Design",
+            "href": "/portfolio-technology/soft-goods-expertise/",
+            "icon": "soft-goods-design.svg"
+          },
+          {
+            "label": "Light and Optics",
+            "href": "/portfolio-technology/lights-optics/",
+            "icon": "light-and-optics.svg"
+          },
+          {
+            "label": "Wireless Connectivity",
+            "href": "/portfolio-technology/wireless-connectivity/",
+            "icon": "wireless-connectivity.svg"
+          },
+          {
+            "label": "Software Development",
+            "href": "/portfolio-technology/software-development",
+            "icon": "software-development.svg"
+          },
+          {
+            "label": "Electronics Development",
+            "href": "/portfolio-technology/electronics-development/",
+            "icon": "electronics-development.svg"
+          }
+        ],
+        "cards": []
+      },
+      {
+        "heading": "By Expertise",
+        "groups": [],
+        "links": [
+          {
+            "label": "See All Expertise",
+            "href": "/expertise-portfolio/",
+            "icon": "see-all-expertise.svg"
+          },
+          {
+            "label": "Product Strategy",
+            "href": "/portfolio-expertise/product-strategy/",
+            "icon": "product-strategy.svg"
+          },
+          {
+            "label": "Industrial Design",
+            "href": "/portfolio-expertise/industrial-design/",
+            "icon": "industrial-design.svg"
+          },
+          {
+            "label": "Mechanical",
+            "href": "/portfolio-expertise/mechanical-engineering/",
+            "icon": "mechanical.svg"
+          },
+          {
+            "label": "Software",
+            "href": "/portfolio-expertise/embedded-software/",
+            "icon": "software.svg"
+          },
+          {
+            "label": "Electronics",
+            "href": "/portfolio-expertise/electronics-design/",
+            "icon": "electronics.svg"
+          },
+          {
+            "label": "Prototyping",
+            "href": "/portfolio-expertise/prototyping/",
+            "icon": "prototyping.svg"
+          },
+          {
+            "label": "Sourcing",
+            "href": "/portfolio-expertise/manufacturing/",
+            "icon": "sourcing.svg"
+          },
+          {
+            "label": "Manufacture",
+            "href": "/portfolio-expertise/manufacturing/",
+            "icon": "manufacture.svg"
+          }
+        ],
+        "cards": []
+      },
+      {
+        "heading": "Featured Case Studies",
+        "groups": [],
+        "links": [
+          {
+            "label": "See All Case Studies",
+            "href": "/case-studies-library/",
+            "icon": "see-all-case-studies.svg"
+          }
+        ],
+        "cards": [
+          {
+            "title": "SkyX",
+            "description": "Drone Re-Charging Station",
+            "href": "/portfolio/skyx/",
+            "image": "https://design1st.com/wp-content/uploads/2023/12/SkyX-img.jpg"
+          },
+          {
+            "title": "TabloTV",
+            "description": "OTA DVR for Cordcutters",
+            "href": "/portfolio/tablotv-ota-dvr-for-cordcutters/",
+            "image": "https://design1st.com/wp-content/uploads/2023/12/TabloTV-img.jpg"
+          },
+          {
+            "title": "Calibre",
+            "description": "Measure Your Breath",
+            "href": "https://calibrebio.com/",
+            "image": "https://design1st.com/wp-content/uploads/2023/08/D1-Homepage-image-19-Calibre.jpg"
+          },
+          {
+            "title": "ARC",
+            "description": "Enterprise Mobile Charging Kiosk",
+            "href": "#",
+            "image": "https://design1st.com/wp-content/uploads/2023/02/arc-european-design-award-i.jpg"
+          }
+        ]
+      }
+    ],
+    "promo": {
+      "text": "",
+      "cta": null,
+      "buttons": []
+    }
+  },
+  {
+    "label": "About",
+    "kind": "list",
+    "links": [
+      {
+        "label": "Contact Us",
+        "href": "/contact/"
+      },
+      {
+        "label": "About Us",
+        "href": "/company/"
+      },
+      {
+        "label": "Our Process",
+        "href": "/product-development-process/"
+      },
+      {
+        "label": "Our Bio",
+        "href": "/bio-intro.pdf"
+      },
+      {
+        "label": "Information Library",
+        "href": "/blog/"
+      },
+      {
+        "label": "Video Library",
+        "href": "/client-stories/"
+      },
+      {
+        "label": "Newsroom",
+        "href": "/newsroom/"
+      },
+      {
+        "label": "Careers",
+        "href": "/careers/"
+      },
+      {
+        "label": "Customer Reviews",
+        "href": "/reviews/"
+      }
+    ]
+  },
+  {
+    "label": "Free Tools",
+    "kind": "list",
+    "links": [
+      {
+        "label": "Planning Tools",
+        "href": "https://planning.design1st.com/"
+      },
+      {
+        "label": "Budget Estimator",
+        "href": "https://planning.design1st.com/budget-tool"
+      },
+      {
+        "label": "Find Funding Tool",
+        "href": "https://aitools.design1st.com/funding-tool?utm_source=Funding+Tool&utm_medium=header-click&utm_campaign=public-ai-tools"
+      },
+      {
+        "label": "User Persona Generator",
+        "href": "https://planning.design1st.com/persona-tool"
+      },
+      {
+        "label": "Capture Requirements",
+        "href": "https://planning.design1st.com/prd-tool"
+      }
+    ]
+  },
+  {
+    "label": "Technology Expertise",
+    "kind": "list",
+    "links": [
+      {
+        "label": "Air Flow and Filtration",
+        "href": "/portfolio-technology/airflow-filtration/"
+      },
+      {
+        "label": "Audio Design",
+        "href": "/portfolio-technology/audio-design-engineering/"
+      },
+      {
+        "label": "Fluid Dynamics",
+        "href": "/portfolio-technology/fluid-dynamics/"
+      },
+      {
+        "label": "Light and Optics",
+        "href": "/portfolio-technology/lights-optics/"
+      },
+      {
+        "label": "Robotics",
+        "href": "/portfolio-technology/robotics-mechanisms/"
+      },
+      {
+        "label": "Soft Goods",
+        "href": "/portfolio-technology/soft-goods-expertise/"
+      },
+      {
+        "label": "Wearables",
+        "href": "/portfolio-technology/body-worn-wearables/"
+      },
+      {
+        "label": "Wireless Connectivity",
+        "href": "/portfolio-technology/wireless-connectivity/"
+      }
+    ]
+  },
+  {
+    "label": "About Us",
+    "kind": "list",
+    "links": [
+      {
+        "label": "About Us",
+        "href": "/company/"
+      },
+      {
+        "label": "Newsroom",
+        "href": "/newsroom/"
+      },
+      {
+        "label": "Careers",
+        "href": "/careers/"
+      }
+    ]
+  },
+  {
+    "label": "Resources",
+    "kind": "list",
+    "links": [
+      {
+        "label": "Blog",
+        "href": "/resource-center/"
+      },
+      {
+        "label": "Video Library",
+        "href": "/client-stories/"
+      },
+      {
+        "label": "How to Get Funding",
+        "href": "/hardware-startup-funding/"
+      }
+    ]
+  }
+]

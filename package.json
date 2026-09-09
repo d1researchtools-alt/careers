@@ -1,0 +1,34 @@
+{
+  "name": "design1st-careers",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "images:careers": "node scripts/optimise-images.mjs",
+    "chrome:diff": "node scripts/compare-chrome.mjs",
+    "chrome:sync": "node scripts/snapshot-chrome.mjs",
+    "chrome:tokens": "node scripts/extract-tokens.mjs",
+    "chrome:badges": "node scripts/optimise-badges.mjs",
+    "smoke": "node scripts/smoke/apply.mjs"
+  },
+  "dependencies": {
+    "@astrojs/vercel": "^11.0.10",
+    "astro": "^7.3.2",
+    "node-html-parser": "^6"
+  },
+  "devDependencies": {
+    "pixelmatch": "^7.2.0",
+    "playwright": "^1.61.1",
+    "pngjs": "^7.0.0",
+    "sharp": "^0.35.4"
+  },
+  "overrides": {
+    "@vercel/routing-utils": {
+      "path-to-regexp": "6.3.0"
+    }
+  }
+}
