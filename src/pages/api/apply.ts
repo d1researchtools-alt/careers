@@ -52,7 +52,22 @@ export const GET: APIRoute = async () => {
 }
 
 /** Gravity Forms' choice values for field 10 — must match the form exactly. */
-const DISCIPLINES = ["Industrial Designer", "Mechanical Engineer", "Electronics Engineer", "Embedded Systems", "Other"]
+const GF_DISCIPLINES = ["Industrial Designer", "Mechanical Engineer", "Electronics Engineer", "Embedded Systems", "Other"]
+
+/**
+ * The page's Discipline select → the field 10 checkbox it ticks. Form #2 has
+ * no Manufacturing choice, so it lands on Other; the exact choice (and the
+ * "Your Discipline" text) is written into field 11 as well, so hiring always
+ * sees what the applicant picked.
+ */
+const DISCIPLINE_MAP: Record<string, string> = {
+  "Mechanical engineering": "Mechanical Engineer",
+  "Industrial design": "Industrial Designer",
+  "Electronics engineering": "Electronics Engineer",
+  "Embedded software": "Embedded Systems",
+  Manufacturing: "Other",
+  Other: "Other",
+}
 
 interface UploadedFile {
   temp_filename: string
@@ -65,7 +80,10 @@ interface Payload {
   email?: string
   phone?: string
   why?: string
-  disciplines?: string[]
+  discipline?: string
+  /** Only when discipline is "Other". */
+  disciplineOther?: string
+  workUrl?: string
   files?: UploadedFile[]
   /** The alnum id the browser used for its uploads; the submit must match. */
   uniqueId?: string
@@ -73,6 +91,7 @@ interface Payload {
 }
 
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
+const URL_LIKE = /^https?:\/\/\S+\.\S+/i
 const UNIQUE_ID = /^[a-z0-9]{8,40}$/i
 // A temp filename is "<uniqueId>_input_<field>_<random>.<ext>". Anything with
 // a path separator in it is not one, whatever else it is.
@@ -93,9 +112,9 @@ export const POST: APIRoute = async ({ request }) => {
   const phone = str(payload.phone, 50)
   const why = str(payload.why, 10000)
   const uniqueId = str(payload.uniqueId, 40)
-  const disciplines = Array.isArray(payload.disciplines)
-    ? payload.disciplines.filter((d): d is string => typeof d === "string" && DISCIPLINES.includes(d))
-    : []
+  const discipline = str(payload.discipline, 100)
+  const disciplineOther = str(payload.disciplineOther, 200)
+  const workUrl = str(payload.workUrl, 2000)
   const files = Array.isArray(payload.files) ? payload.files : []
 
   // Honeypot: form #2's decoy is input_20 ("X/Twitter"). Gravity Forms discards
@@ -103,11 +122,22 @@ export const POST: APIRoute = async ({ request }) => {
   // nothing it can act on.
   if (str(payload.honeypot)) return json({ ok: true, message: MESSAGES.success })
 
-  // Mirror Gravity Forms' own rules before spending a round trip to WordPress.
-  // Only field 11 is required on the form; the rest are checked for shape.
+  // Every field on the page is required. Form #2 itself only requires field
+  // 11, so these checks are the page's rules, enforced here too. Keys match
+  // the form's data-gf attributes.
+  const required = "This field is required."
   const fieldErrors: Record<string, string> = {}
-  if (!why) fieldErrors["11"] = "This field is required."
-  if (email && !EMAIL.test(email)) fieldErrors["1"] = "Please enter a valid email address."
+  if (!firstName) fieldErrors["9.3"] = required
+  if (!lastName) fieldErrors["9.6"] = required
+  if (!email) fieldErrors["1"] = required
+  else if (!EMAIL.test(email)) fieldErrors["1"] = "Please enter a valid email address."
+  if (!phone) fieldErrors["8"] = required
+  if (!(discipline in DISCIPLINE_MAP)) fieldErrors["10"] = required
+  else if (discipline === "Other" && !disciplineOther) fieldErrors.disciplineOther = required
+  if (!files.length) fieldErrors["3"] = "Please attach your résumé or portfolio."
+  if (!workUrl) fieldErrors.workUrl = required
+  else if (!URL_LIKE.test(workUrl)) fieldErrors.workUrl = "Please enter a full link, starting with https://"
+  if (!why) fieldErrors["11"] = required
   if (Object.keys(fieldErrors).length) return json({ ok: false, message: MESSAGES.invalid, fieldErrors }, 400)
 
   if (files.length > UPLOAD_RULES.maxFiles) {
@@ -142,13 +172,20 @@ export const POST: APIRoute = async ({ request }) => {
   // Field ids from the live form: 9 name, 1 email, 8 phone, 11 why, 10
   // discipline checkboxes, 3 files, 20 honeypot. 12–19 are hidden tracking
   // fields that the WordPress page leaves empty; omitting them is the same.
+  // Form #2 has no fields for the exact discipline or the work link, so they
+  // head field 11 where the entry and the notification email both show them.
+  const gfDiscipline = DISCIPLINE_MAP[discipline]
+  const details = [
+    `Discipline: ${discipline === "Other" ? `Other: ${disciplineOther}` : discipline}`,
+    `Link to work: ${workUrl}`,
+  ].join("\n")
   set("input_9.3", firstName)
   set("input_9.6", lastName)
   set("input_1", email)
   set("input_8", phone)
-  set("input_11", why)
+  set("input_11", `${details}\n\n${why}`)
   set("input_20", "")
-  for (const d of disciplines) set(`input_10.${DISCIPLINES.indexOf(d) + 1}`, d)
+  set(`input_10.${GF_DISCIPLINES.indexOf(gfDiscipline) + 1}`, gfDiscipline)
 
   // The files were already uploaded to Gravity Forms' temp directory by the
   // browser (see GET). This is the ledger the widget would have kept in its

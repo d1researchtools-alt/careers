@@ -63,9 +63,11 @@ if (SUBMIT) {
   await p.fill("#cr-last", "TEST")
   await p.fill("#cr-email", "smoke-test@design1st.com")
   await p.fill("#cr-phone", "000-000-0000")
+  await p.selectOption("#cr-discipline", "Other")
+  await p.fill("#cr-discipline-other", "SMOKE TEST")
+  await p.fill("#cr-work", "https://design1st.com/")
   await p.fill("#cr-why", "SMOKE TEST — automated check of the careers form after the move to Vercel. Please ignore.")
-  await p.check("input[name=disciplines][value=Other]")
-  await p.click(".cr-submit")
+  await p.click(".cr-form button[type=submit]")
   await p.waitForFunction(
     () => !document.querySelector("[data-done]").hidden || document.querySelector("[data-status]").textContent,
     null,

@@ -1,17 +1,26 @@
 /* ============================================================================
    CAREERS PAGE. Tokens live in tokens.css; this file is components only.
-   Everything is scoped under .cr so nothing reaches the header or footer.
+   Everything is scoped under .cr, except the header CTA colour (see Buttons).
 
-   Measurements are the live Elementor page at 1440 (scripts in the insights
-   repo, same method as artifacts/layout-1440.json): 32/38 headings, 16px body
-   at 1.8, a 583x396 hero photo, a 582px form column inside a white card on a
-   grey band, and a two-up photo grid at 523px per cell. Where the live values
+   Layout follows the designer handoff of 2026-09-24, itself measured on the
+   live Elementor page at 1440: a 1080 content column, 80px section padding,
+   32/38 section heads, #F2F2F2 bands, a 662px form column on the band, and
+   the live page's two-up photo grid at 523px per cell. Where the live values
    fail contrast — #ccc field borders, #aaa placeholder text — the insights
    kit's field-line and muted tokens stand in; that decision was already made
    once for /insights and is not re-litigated here.
    ============================================================================ */
 
+/* The AA hover ground, and the handoff's measures: a 1080 content column,
+   80px section padding, a 662 form column. :root because the header CTAs
+   use the hover colour too. */
+:root {
+  --c-orange-hover: #a84300;
+}
 .cr {
+  --cr-col: 1080px;
+  --cr-form: 662px;
+  --cr-pad: 80px;
   font-family: var(--d1-font);
   color: var(--c-body);
   font-size: 16px;
@@ -75,27 +84,85 @@
   padding: 0 var(--d1-gutter);
 }
 
+/* ---- Buttons ------------------------------------------------------------------ */
+/* The site pattern (52px, 8px radius, 2px border, bold) on the AA ground:
+   white on #FF6600 is 2.9:1, white on --c-orange-text is 4.73:1. One class
+   for the hero, the role cards and the submit. */
+.cr-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0 36px;
+  border: 2px solid var(--c-orange-text);
+  border-radius: var(--radius);
+  background: var(--c-orange-text);
+  color: var(--c-white);
+  font: inherit;
+  font-size: 16px;
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.25px;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
+}
+.cr a.cr-btn {
+  color: var(--c-white);
+}
+.cr-btn:hover,
+.cr-btn:active {
+  background: var(--c-orange-hover);
+  border-color: var(--c-orange-hover);
+}
+.cr-btn[disabled] {
+  opacity: 0.6;
+  cursor: progress;
+}
+.cr-btn--block {
+  width: 100%;
+  margin-top: var(--sp-2);
+}
+
+/* The header CTAs take the same AA ground on this page (designer ruling,
+   2026-09-24). Scoped here rather than in chrome.css, which stays a verbatim
+   copy of the insights repo's. */
+.d1-btn--solid {
+  background: var(--c-orange-text);
+}
+.d1-btn--solid:hover {
+  background: var(--c-orange-hover);
+}
+.d1-btn--ghost {
+  border-color: var(--c-orange-text);
+}
+.d1-btn--ghost:hover {
+  background: var(--c-orange-text);
+}
+
 /* ---- Hero ------------------------------------------------------------------ */
 .cr-hero {
   background: var(--c-white);
 }
+/* The 1080 content column the live page's sections use, halves split 40/40
+   either side of the middle. */
 .cr-hero__grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 583px);
-  gap: var(--sp-12);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 80px;
   align-items: center;
-  min-height: 436px;
-  padding-top: var(--sp-8);
-  padding-bottom: var(--sp-8);
-}
-.cr-hero__copy {
-  max-width: 520px;
+  max-width: calc(var(--cr-col) + 2 * var(--d1-gutter));
+  padding-top: var(--sp-16);
+  padding-bottom: var(--sp-16);
 }
 .cr-crumbs ol {
   display: flex;
   flex-wrap: wrap;
   gap: 0 var(--sp-2);
-  margin: 0 0 var(--sp-6);
+  margin: 0 0 20px;
   padding: 0;
   list-style: none;
   font-size: var(--t-small);
@@ -117,7 +184,7 @@
   display: flex;
   align-items: center;
   gap: var(--sp-2);
-  margin-bottom: var(--sp-4);
+  margin-bottom: var(--sp-3);
   font-size: var(--t-small);
   color: var(--c-muted);
 }
@@ -134,88 +201,212 @@
   width: 14px;
   height: 14px;
 }
-.cr-hero h1 {
-  margin-bottom: var(--sp-6);
+/* Rhythm: crumb 20, Clutch 12, heading 16, subtitle 32, button. */
+.cr .cr-hero h1 {
+  margin-bottom: var(--sp-4);
+  font-size: var(--t-h1);
+  line-height: 46px;
 }
-/* .cr p resets margins at (0,1,1); these two need the extra class to win. */
+/* .cr p resets margins at (0,1,1); this needs the extra class to win. */
 .cr p.cr-hero__lede {
   margin-bottom: var(--sp-8);
-  max-width: 492px;
+  max-width: 44ch;
+  font-size: 18px;
+  line-height: 28px;
 }
-.cr-hero__photo {
+.cr-video {
+  position: relative;
   width: 100%;
-  aspect-ratio: 583 / 396;
-  object-fit: cover;
+  aspect-ratio: 16 / 9;
   border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--c-ink);
+  box-shadow: 0 3px 4px rgb(0 0 0 / 20%);
+}
+.cr-video iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
 }
 
-/* The hero CTA. Matches the live button (52px tall, 8px radius, 275 wide),
-   which is NOT the chrome's .d1-btn — that one is 42px at 2px. Hover/pressed
-   go to the deep orange; text stays white as it is on the live page. */
-.cr-cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 275px;
-  min-height: 52px;
-  padding: var(--sp-2) var(--sp-6);
-  border: 2px solid var(--c-orange);
-  border-radius: var(--radius);
-  background: var(--c-orange);
-  color: var(--c-white);
-  font-weight: var(--fw-bold);
-  font-size: 16px;
-  line-height: 1.2;
-  text-decoration: none;
-  transition:
-    background var(--dur) var(--ease),
-    border-color var(--dur) var(--ease);
+/* ---- Section shell ------------------------------------------------------------ */
+.cr-section {
+  padding: var(--cr-pad) 0;
 }
-.cr-cta:hover,
-.cr-cta:active {
-  background: var(--c-orange-deep);
-  border-color: var(--c-orange-deep);
+.cr-section > .cr-wrap,
+.cr-stats > .cr-wrap {
+  max-width: calc(var(--cr-col) + 2 * var(--d1-gutter));
 }
-
-/* ---- How to apply ---------------------------------------------------------- */
-.cr-how {
-  padding: 80px 0;
-  text-align: center;
-}
-.cr-how__inner {
-  max-width: 900px;
-}
-.cr-how h2 {
-  margin-bottom: var(--sp-6);
-}
-.cr-how p + p {
-  margin-top: var(--sp-6);
-}
-
-/* ---- Apply (the grey band and the card) ------------------------------------ */
-.cr-apply {
-  padding: 80px 0;
+.cr-band {
   background: var(--c-wash);
 }
-.cr-card {
-  max-width: 646px;
-  margin: 0 auto;
-  padding: 40px 32px 48px;
-  background: var(--c-white);
-  border-radius: var(--radius);
-  box-shadow: 0 2px 12px rgb(0 0 0 / 8%);
-}
-.cr-card__title {
-  margin: 0 0 var(--sp-6);
-  font-size: var(--t-h1);
-  line-height: 52px;
+.cr-head {
+  max-width: 865px;
+  margin: 0 auto var(--sp-12);
   text-align: center;
-  color: var(--c-body);
+}
+.cr .cr-head p {
+  margin-top: var(--sp-4);
+  color: var(--c-slate);
+  text-wrap: pretty;
+}
+.cr .cr-head p + p {
+  margin-top: var(--sp-3);
 }
 
-.cr-form {
+/* ---- Stats -------------------------------------------------------------------- */
+.cr-stats {
+  padding: var(--sp-12) 0;
+  border-top: var(--border-1);
+}
+.cr-stats__grid {
   display: grid;
-  gap: var(--sp-4);
+  grid-template-columns: repeat(4, 1fr);
+}
+.cr-stat {
+  padding: 0 var(--sp-4);
+  text-align: center;
+}
+.cr-stat + .cr-stat {
+  border-left: var(--border-1);
+}
+.cr-stat__n {
+  font-size: 36px;
+  line-height: 40px;
+  font-weight: var(--fw-bold);
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.cr-stat__l {
+  margin-top: 6px;
+  font-size: var(--t-small);
+  line-height: 20px;
+  color: var(--c-slate);
+}
+
+/* ---- About -------------------------------------------------------------------- */
+.cr-about {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: start;
+}
+.cr .cr-h3 {
+  margin-bottom: var(--sp-4);
+  font-size: 28px;
+  line-height: 34px;
+}
+.cr-about p {
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+
+/* ---- Open positions ----------------------------------------------------------- */
+.cr-roles {
+  display: grid;
+  gap: var(--sp-6);
+}
+.cr-role {
+  padding: 40px;
+  background: var(--c-white);
+  border: var(--border-1);
+  border-radius: var(--radius);
+  box-shadow: 0 0 10px rgb(0 0 0 / 8%);
+}
+.cr-role__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+  padding-bottom: var(--sp-6);
+  border-bottom: var(--border-1);
+}
+.cr-role__title {
+  margin: 0 0 4px;
+  font-size: var(--t-h3);
+  line-height: 32px;
+  font-weight: var(--fw-bold);
+  color: var(--c-ink);
+}
+.cr p.cr-role__meta {
+  font-size: var(--t-small);
+  line-height: 20px;
+  color: var(--c-slate);
+}
+.cr-role__head .cr-btn {
+  min-width: 200px;
+}
+.cr p.cr-role__summary {
+  margin-top: var(--sp-6);
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+.cr-role__cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 28px;
+}
+.cr-role__cols > div:first-child {
+  padding-right: 40px;
+}
+.cr-role__cols > div + div {
+  padding-left: 40px;
+  border-left: var(--border-1);
+}
+.cr-role__sub {
+  margin: 0;
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: var(--fw-bold);
+  color: var(--c-ink);
+}
+.cr-role__reqs {
+  display: grid;
+  gap: var(--sp-2);
+  margin: var(--sp-3) 0 0;
+  padding: 0;
+  list-style: none;
+  line-height: 1.6;
+}
+.cr-role__reqs li {
+  position: relative;
+  padding-left: var(--sp-4);
+}
+.cr-role__reqs li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.7em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--c-slate);
+}
+.cr-role__reqs--plus {
+  color: var(--c-slate);
+}
+.cr-role__reqs--plus li::before {
+  background: transparent;
+  border: 1px solid var(--c-slate);
+}
+.cr-empty {
+  max-width: var(--cr-form);
+  margin: 0 auto;
+  padding: var(--sp-8);
+  text-align: center;
+  border: var(--border-1);
+  border-radius: var(--radius);
+}
+
+/* ---- Apply form (fields sit on the band; no white card) ---------------------- */
+.cr-form {
+  max-width: var(--cr-form);
+  margin: 0 auto;
+  display: grid;
+  gap: var(--sp-6);
 }
 .cr-form[hidden] {
   display: none;
@@ -223,143 +414,127 @@
 .cr-form__row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--sp-4);
+  gap: var(--sp-6);
 }
-.cr-field {
-  display: grid;
-  gap: var(--sp-2);
+.cr-field[hidden] {
+  display: none;
 }
-.cr-form input:not([type="checkbox"]):not([type="file"]),
+.cr-field label,
+.cr-label {
+  display: block;
+  margin: 0 0 var(--sp-2);
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 600;
+  color: var(--c-ink);
+}
+.cr p.cr-hint {
+  margin-top: var(--sp-2);
+  font-size: var(--t-small);
+  line-height: 1.5;
+  color: var(--c-slate);
+}
+.cr-form input:not([type="file"]),
+.cr-form select,
 .cr-form textarea {
+  display: block;
   width: 100%;
-  min-height: 56px;
-  padding: 15px;
+  min-height: 52px;
+  margin: 0;
+  padding: 0 14px;
   font: inherit;
   font-size: 16px;
-  line-height: 1.5;
-  color: var(--c-body);
+  line-height: 1.6;
+  color: var(--c-ink);
   background: var(--c-white);
   border: 1px solid var(--c-field-line);
-  border-radius: 4px;
+  border-radius: var(--radius);
 }
 .cr-form textarea {
-  min-height: 216px;
+  min-height: 132px;
+  padding: var(--sp-3) 14px;
   resize: vertical;
+}
+.cr-form select {
+  appearance: none;
+  padding-right: 44px;
+  background: var(--c-white)
+    url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath fill='%2354565A' d='M1 1l5 5 5-5'/%3E%3C/svg%3E")
+    no-repeat right 16px center;
 }
 .cr-form ::placeholder {
   color: var(--c-muted);
   opacity: 1;
 }
+.cr-form input:focus,
+.cr-form select:focus,
+.cr-form textarea:focus {
+  border-color: var(--c-orange);
+  outline: none;
+}
 .cr-form [aria-invalid="true"] {
   border-color: #b00020;
 }
 .cr-field__error {
-  margin: 0;
+  margin: var(--sp-2) 0 0;
   font-size: var(--t-small);
   line-height: 1.4;
   color: #b00020;
 }
-.cr-form__row .cr-field__error {
-  grid-column: 1 / -1;
-}
 
-.cr-choices {
-  margin: var(--sp-2) 0 0;
-  padding: 0;
-  border: 0;
-  display: grid;
-  gap: var(--sp-3);
-}
-.cr-choices legend {
-  padding: 0;
-  margin-bottom: var(--sp-3);
-  font-size: 17px;
-  font-weight: var(--fw-bold);
-  color: var(--c-ink);
-}
-.cr-choice {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: var(--sp-3);
+/* ---- Files -------------------------------------------------------------------- */
+.cr-upload {
+  position: relative;
+  display: flex;
   align-items: center;
-  font-size: 16px;
-  line-height: 1.4;
-  color: var(--c-ink);
-  cursor: pointer;
+  gap: 14px;
+  min-height: 52px;
+  padding: 3px 14px 3px 3px;
+  background: var(--c-white);
+  border: 1px solid var(--c-field-line);
+  border-radius: var(--radius);
+  transition: border-color var(--dur) var(--ease);
 }
-.cr-choice input {
-  width: 18px;
-  height: 18px;
-  margin: 0;
-  accent-color: var(--c-orange);
-}
-
-/* ---- Files ------------------------------------------------------------------ */
-.cr-files {
-  display: grid;
-  gap: var(--sp-3);
-  margin-top: var(--sp-2);
-}
-.cr-files__label {
-  font-size: 17px;
-  font-weight: var(--fw-bold);
-  color: var(--c-ink);
-}
-.cr-files__max {
-  font-weight: var(--fw-bold);
-}
-.cr-drop {
-  display: grid;
-  justify-items: center;
-  gap: var(--sp-3);
-  min-height: 216px;
-  padding: var(--sp-6);
-  text-align: center;
-  border: 1px dashed rgb(255 102 0 / 45%);
-  border-radius: 4px;
-  transition:
-    border-color var(--dur) var(--ease),
-    background var(--dur) var(--ease);
-  align-content: center;
-}
-.cr-drop.is-over {
+.cr-upload.is-over {
   border-color: var(--c-orange);
-  border-style: solid;
+}
+.cr-field.is-invalid .cr-upload {
+  border-color: #b00020;
+}
+.cr-upload input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.cr-field label.cr-upload__btn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-height: 44px;
+  margin: 0;
+  padding: 0 var(--sp-4);
+  font-weight: 600;
+  color: var(--c-ink);
   background: var(--c-wash);
-}
-.cr-drop__icon {
-  width: 64px;
-  height: 48px;
-  color: var(--c-orange);
-}
-.cr-drop__text {
-  font-size: 16px;
-  color: var(--c-body);
-}
-.cr-drop__browse {
-  padding: 0;
-  border: 0;
-  background: none;
-  font: inherit;
-  font-weight: var(--fw-bold);
-  color: var(--c-orange-text);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  border: var(--border-1);
+  border-radius: 6px;
   cursor: pointer;
 }
-.cr-drop__rules {
-  font-size: var(--t-small);
-  line-height: 1.5;
-  color: var(--c-muted);
+.cr-upload__btn:hover {
+  border-color: var(--c-field-line);
 }
-.cr-files.is-invalid .cr-drop {
-  border-color: #b00020;
+.cr-upload__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--c-slate);
 }
 
 .cr-files__list {
   display: grid;
   gap: var(--sp-2);
-  margin: 0;
+  margin: var(--sp-3) 0 0;
   padding: 0;
   list-style: none;
 }
@@ -375,7 +550,7 @@
   padding: var(--sp-3) var(--sp-4);
   font-size: var(--t-small);
   line-height: 1.4;
-  background: var(--c-wash);
+  background: var(--c-white);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -442,29 +617,6 @@
   width: 1px;
   height: 1px;
   overflow: hidden;
-}
-
-/* Full width, 56px, ink on orange (5.8:1) — as on the live form. */
-.cr-submit {
-  margin-top: var(--sp-2);
-  min-height: 56px;
-  padding: var(--sp-3) var(--sp-4);
-  border: 0;
-  border-radius: 2px;
-  background: var(--c-orange);
-  color: var(--c-ink);
-  font: inherit;
-  font-size: 18px;
-  font-weight: var(--fw-bold);
-  cursor: pointer;
-  transition: background var(--dur) var(--ease);
-}
-.cr-submit:hover {
-  background: var(--c-orange-deep);
-}
-.cr-submit[disabled] {
-  opacity: 0.6;
-  cursor: progress;
 }
 
 .cr-form__status {
@@ -534,29 +686,6 @@
   .cr-wrap {
     padding: 0 var(--sp-6);
   }
-  .cr-hero__grid {
-    grid-template-columns: 1fr;
-    gap: var(--sp-8);
-    min-height: 0;
-    padding-top: var(--sp-6);
-    padding-bottom: 0;
-  }
-  .cr-hero__copy {
-    max-width: none;
-  }
-  /* The photo goes full-bleed under the copy, as on the live page. */
-  .cr-hero__photo {
-    width: auto;
-    margin: 0 calc(-1 * var(--sp-6));
-    max-width: none;
-    border-radius: 0;
-    aspect-ratio: 4 / 3;
-  }
-  .cr-cta {
-    width: 100%;
-  }
-  .cr-how,
-  .cr-apply,
   .cr-gallery {
     padding-top: var(--sp-16);
     padding-bottom: var(--sp-16);
@@ -567,21 +696,94 @@
   }
 }
 
+/* Elementor's mobile breakpoint, which the handoff was drawn against. */
+@media (max-width: 767px) {
+  .cr {
+    --cr-pad: 56px;
+  }
+  .cr-wrap {
+    padding: 0 20px;
+  }
+  .cr-hero__grid {
+    grid-template-columns: 1fr;
+    gap: var(--sp-8);
+    padding-top: var(--sp-8);
+    padding-bottom: var(--sp-12);
+  }
+  .cr .cr-hero h1 {
+    font-size: 32px;
+    line-height: 38px;
+  }
+  .cr p.cr-hero__lede {
+    margin-bottom: 28px;
+  }
+  .cr-btn--hero {
+    width: 100%;
+  }
+  .cr-head {
+    margin-bottom: var(--sp-8);
+  }
+  .cr-stats {
+    padding: var(--sp-8) 0;
+  }
+  .cr-stats__grid {
+    grid-template-columns: 1fr 1fr;
+    row-gap: 28px;
+  }
+  .cr-stat:nth-child(3) {
+    border-left: 0;
+  }
+  .cr-stat__n {
+    font-size: 28px;
+    line-height: 32px;
+  }
+  .cr-about {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+  .cr .cr-h3 {
+    font-size: var(--t-h3);
+    line-height: 30px;
+  }
+  .cr-role {
+    padding: var(--sp-6);
+  }
+  .cr-role__title {
+    font-size: 22px;
+    line-height: 28px;
+  }
+  .cr-role__head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 20px;
+  }
+  .cr-role__head .cr-btn {
+    width: 100%;
+    min-width: 0;
+  }
+  .cr-role__cols {
+    grid-template-columns: 1fr;
+    row-gap: var(--sp-6);
+  }
+  .cr-role__cols > div:first-child {
+    padding-right: 0;
+  }
+  .cr-role__cols > div + div {
+    padding-left: 0;
+    padding-top: var(--sp-6);
+    border-left: 0;
+    border-top: var(--border-1);
+  }
+  .cr-form__row {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 599px) {
   .cr h1,
   .cr h2 {
     font-size: 28px;
     line-height: 34px;
-  }
-  .cr-card {
-    padding: var(--sp-8) var(--sp-4) var(--sp-8);
-  }
-  .cr-card__title {
-    font-size: var(--t-h2);
-    line-height: 1.25;
-  }
-  .cr-form__row {
-    grid-template-columns: 1fr;
   }
   .cr-file {
     grid-template-columns: minmax(0, 1fr) auto;

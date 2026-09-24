@@ -19,8 +19,15 @@ import { UPLOAD_RULES } from "@/lib/gravity"
 // routes have to be resolved against it rather than the page URL.
 const API = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/api`
 
-/** Field 10's choices. Values must match the WordPress form exactly. */
-const DISCIPLINES = ["Industrial Designer", "Mechanical Engineer", "Electronics Engineer", "Embedded Systems", "Other"]
+/** The Discipline select. /api/apply maps each onto a field 10 choice. */
+const DISCIPLINES = [
+  "Mechanical engineering",
+  "Industrial design",
+  "Electronics engineering",
+  "Embedded software",
+  "Manufacturing",
+  "Other",
+]
 
 const ACCEPT = UPLOAD_RULES.extensions.map((e) => `.${e}`).join(",")
 const RULES = {
@@ -29,102 +36,100 @@ const RULES = {
   extensions: UPLOAD_RULES.extensions,
 }
 const MAX_MB = Math.round(UPLOAD_RULES.maxBytes / 1024 / 1024)
+const TYPES = UPLOAD_RULES.extensions.map((e) => e.toUpperCase())
+const TYPES_TEXT = `${TYPES.slice(0, -1).join(", ")} or ${TYPES.at(-1)}`
 ---
 
-<div class="cr-card">
-  <h2 class="cr-card__title" id="job-request-form">Job Request Form</h2>
-
-  <form class="cr-form" data-apply-form novalidate aria-labelledby="job-request-form">
-    {
-      /* Visible labels are the placeholders, as on the live form; the <label>s
-         are kept for assistive tech and for the error association. */
-    }
-    <div class="cr-form__row" data-gf="9">
-      <div class="cr-field">
-        <label class="sr-only" for="cr-first">First Name</label>
-        <input id="cr-first" name="firstName" placeholder="First Name" autocomplete="given-name" />
-      </div>
-      <div class="cr-field">
-        <label class="sr-only" for="cr-last">Last Name</label>
-        <input id="cr-last" name="lastName" placeholder="Last Name" autocomplete="family-name" />
-      </div>
+{
+  /* Every field is required. Errors are keyed by data-gf: Gravity Forms field
+     ids where the field exists on form #2, a name where it does not (the
+     discipline detail and the work link travel inside field 11). */
+}
+<form class="cr-form" data-apply-form novalidate aria-label="Job application">
+  <div class="cr-form__row">
+    <div class="cr-field" data-gf="9.3">
+      <label for="cr-first">First Name</label>
+      <input id="cr-first" name="firstName" autocomplete="given-name" required />
     </div>
-
-    <div class="cr-field" data-gf="1">
-      <label class="sr-only" for="cr-email">Email</label>
-      <input id="cr-email" name="email" type="email" placeholder="Email" autocomplete="email" inputmode="email" />
+    <div class="cr-field" data-gf="9.6">
+      <label for="cr-last">Last Name</label>
+      <input id="cr-last" name="lastName" autocomplete="family-name" required />
     </div>
-
-    <div class="cr-field" data-gf="8">
-      <label class="sr-only" for="cr-phone">Phone</label>
-      <input id="cr-phone" name="phone" type="tel" placeholder="Phone" autocomplete="tel" />
-    </div>
-
-    <div class="cr-field" data-gf="11">
-      <label class="sr-only" for="cr-why">Why do you want to work at Design 1st? (required)</label>
-      <textarea
-        id="cr-why"
-        name="why"
-        rows="7"
-        placeholder="Why do you want to work at Design 1st? *"
-        required
-        aria-required="true"
-      ></textarea>
-    </div>
-
-    <fieldset class="cr-choices" data-gf="10">
-      <legend>Discipline</legend>
-      {
-        DISCIPLINES.map((d) => (
-          <label class="cr-choice">
-            <input type="checkbox" name="disciplines" value={d} />
-            <span>{d}</span>
-          </label>
-        ))
-      }
-    </fieldset>
-
-    <div class="cr-files" data-gf="3">
-      <p class="cr-files__label" id="cr-files-label">
-        Files <span class="cr-files__max">(Max {MAX_MB}MB)</span>
-      </p>
-      <div class="cr-drop" data-drop>
-        <svg class="cr-drop__icon" viewBox="0 0 64 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M20 40h-4a11 11 0 0 1-1.3-21.9A15 15 0 0 1 43.6 15 12 12 0 0 1 46 40h-4" />
-          <path d="M32 44V22m0 0-8 8m8-8 8 8" />
-        </svg>
-        <p class="cr-drop__text">
-          Drop files here or
-          <button type="button" class="cr-drop__browse" data-browse aria-describedby="cr-files-rules">select files</button>
-        </p>
-        <p class="cr-drop__rules" id="cr-files-rules">
-          {UPLOAD_RULES.extensions.map((e) => e.toUpperCase()).join(", ")}. Up to {UPLOAD_RULES.maxFiles} files, {MAX_MB} MB each.
-        </p>
-        <input type="file" data-file-input accept={ACCEPT} multiple hidden aria-labelledby="cr-files-label" />
-      </div>
-      <ul class="cr-files__list" data-file-list role="list"></ul>
-    </div>
-
-    {
-      /* Honeypot. Form #2's own decoy is the "X/Twitter" field; Gravity Forms
-         silently discards submissions that fill it and /api/apply does the
-         same. Off-screen rather than display:none so naive bots still see it. */
-    }
-    <div class="cr-form__hp" aria-hidden="true">
-      <label>
-        X/Twitter
-        <input type="text" name="honeypot" tabindex="-1" autocomplete="off" />
-      </label>
-    </div>
-
-    <button type="submit" class="cr-submit">Submit Your Application</button>
-    <p class="cr-form__status" data-status role="status" aria-live="polite"></p>
-  </form>
-
-  <div class="cr-done" data-done hidden tabindex="-1">
-    <h2 class="cr-done__title">Application received</h2>
-    <p class="cr-done__text" data-done-text></p>
   </div>
+
+  <div class="cr-form__row">
+    <div class="cr-field" data-gf="1">
+      <label for="cr-email">Email</label>
+      <input id="cr-email" name="email" type="email" autocomplete="email" inputmode="email" required />
+    </div>
+    <div class="cr-field" data-gf="8">
+      <label for="cr-phone">Phone</label>
+      <input id="cr-phone" name="phone" type="tel" autocomplete="tel" required />
+    </div>
+  </div>
+
+  <div class="cr-field" data-gf="10">
+    <label for="cr-discipline">Discipline</label>
+    <select id="cr-discipline" name="discipline" required>
+      {DISCIPLINES.map((d, i) => <option value={d} selected={i === 0}>{d}</option>)}
+    </select>
+  </div>
+
+  <div class="cr-field" data-gf="disciplineOther" data-other hidden>
+    <label for="cr-discipline-other">Your Discipline</label>
+    <input id="cr-discipline-other" name="disciplineOther" required disabled />
+  </div>
+
+  <div class="cr-field" data-gf="3">
+    <span class="cr-label" id="cr-files-label">Résumé or Portfolio</span>
+    <div class="cr-upload" data-drop>
+      <input
+        type="file"
+        id="cr-files"
+        data-file-input
+        accept={ACCEPT}
+        multiple
+        aria-labelledby="cr-files-label"
+        aria-describedby="cr-files-rules"
+      />
+      <label for="cr-files" class="cr-upload__btn">Choose Files</label>
+      <span class="cr-upload__name" data-file-summary aria-live="polite">No file selected</span>
+    </div>
+    <p class="cr-hint" id="cr-files-rules">
+      {TYPES_TEXT}. Up to {UPLOAD_RULES.maxFiles} files, {MAX_MB} MB each.
+    </p>
+    <ul class="cr-files__list" data-file-list role="list"></ul>
+  </div>
+
+  <div class="cr-field" data-gf="workUrl">
+    <label for="cr-work">Link to Your Work</label>
+    <input id="cr-work" name="workUrl" type="url" placeholder="https://" inputmode="url" required />
+  </div>
+
+  <div class="cr-field" data-gf="11">
+    <label for="cr-why">Why do you want to work at Design 1st?</label>
+    <textarea id="cr-why" name="why" rows="5" required></textarea>
+  </div>
+
+  {
+    /* Honeypot. Form #2's own decoy is the "X/Twitter" field; Gravity Forms
+       silently discards submissions that fill it and /api/apply does the
+       same. Off-screen rather than display:none so naive bots still see it. */
+  }
+  <div class="cr-form__hp" aria-hidden="true">
+    <label>
+      X/Twitter
+      <input type="text" name="honeypot" tabindex="-1" autocomplete="off" />
+    </label>
+  </div>
+
+  <button type="submit" class="cr-btn cr-btn--block">Submit Application</button>
+  <p class="cr-form__status" data-status role="status" aria-live="polite"></p>
+</form>
+
+<div class="cr-done" data-done hidden tabindex="-1">
+  <h2 class="cr-done__title">Application received</h2>
+  <p class="cr-done__text" data-done-text></p>
 </div>
 
 <script is:inline define:vars={{ API, RULES }}>
@@ -135,10 +140,29 @@ const MAX_MB = Math.round(UPLOAD_RULES.maxBytes / 1024 / 1024)
     const status = form.querySelector("[data-status]")
     const submit = form.querySelector("button[type=submit]")
     const drop = form.querySelector("[data-drop]")
-    const browse = form.querySelector("[data-browse]")
     const input = form.querySelector("[data-file-input]")
     const list = form.querySelector("[data-file-list]")
+    const summary = form.querySelector("[data-file-summary]")
     const done = document.querySelector("[data-done]")
+    const discipline = form.querySelector("#cr-discipline")
+    const otherWrap = form.querySelector("[data-other]")
+    const other = form.querySelector("#cr-discipline-other")
+
+    // "Other" reveals a text field for the discipline name.
+    const syncOther = () => {
+      otherWrap.hidden = discipline.value !== "Other"
+      other.disabled = otherWrap.hidden
+    }
+    discipline.addEventListener("change", syncOther)
+    syncOther()
+
+    // A role's Apply button pre-selects its discipline.
+    document.querySelectorAll("[data-discipline]").forEach((a) =>
+      a.addEventListener("click", () => {
+        discipline.value = a.getAttribute("data-discipline")
+        syncOther()
+      }),
+    )
 
     // Only on design1st.com is Gravity Forms' upload endpoint same-origin.
     // Anywhere else, go through the proxy (4.5 MB cap — see /api/upload).
@@ -193,10 +217,15 @@ const MAX_MB = Math.round(UPLOAD_RULES.maxBytes / 1024 / 1024)
       }
     }
 
+    const summarise = () => {
+      summary.textContent = files.length ? files.map((f) => f.file.name).join(", ") : "No file selected"
+    }
+
     const remove = (entry) => {
       entry.xhr?.abort()
       files.splice(files.indexOf(entry), 1)
       entry.li.remove()
+      summarise()
       // A temp file left behind on the server is purged by Gravity Forms on its
       // own schedule; the submission only claims the ones still listed here.
     }
@@ -288,9 +317,9 @@ const MAX_MB = Math.round(UPLOAD_RULES.maxBytes / 1024 / 1024)
         entry.promise = upload(entry)
       }
       input.value = ""
+      summarise()
     }
 
-    browse.addEventListener("click", () => input.click())
     input.addEventListener("change", () => addFiles(input.files))
     ;["dragenter", "dragover"].forEach((t) =>
       drop.addEventListener(t, (e) => {
@@ -309,7 +338,11 @@ const MAX_MB = Math.round(UPLOAD_RULES.maxBytes / 1024 / 1024)
     // ---- submit --------------------------------------------------------------
     // Gravity Forms field id → the block to flag. Server errors come back keyed
     // by field id so the same map serves both local and WordPress validation.
-    const block = (id) => form.querySelector(`[data-gf="${id}"]`)
+    // WordPress reports the name as field "9"; the page splits it into 9.3/9.6.
+    const block = (id) => form.querySelector(`[data-gf="${id}"]`) || form.querySelector(`[data-gf^="${id}."]`)
+    // DOM order, not key order: JS puts integer-like keys ("1", "11") first.
+    const focusFirst = () =>
+      form.querySelector(".is-invalid")?.querySelector("input:not([type=file]), select, textarea, .cr-upload__btn")?.focus()
     const clearErrors = () => {
       form.querySelectorAll("[data-gf].is-invalid").forEach((el) => el.classList.remove("is-invalid"))
       form.querySelectorAll("[aria-invalid]").forEach((el) => el.removeAttribute("aria-invalid"))
@@ -319,7 +352,7 @@ const MAX_MB = Math.round(UPLOAD_RULES.maxBytes / 1024 / 1024)
       const el = block(id)
       if (!el) return
       el.classList.add("is-invalid")
-      el.querySelectorAll("input:not([type=checkbox]), textarea").forEach((c) => c.setAttribute("aria-invalid", "true"))
+      el.querySelectorAll("input:not([type=file]), select, textarea").forEach((c) => c.setAttribute("aria-invalid", "true"))
       if (message) {
         const p = document.createElement("p")
         p.className = "cr-field__error"
@@ -333,15 +366,24 @@ const MAX_MB = Math.round(UPLOAD_RULES.maxBytes / 1024 / 1024)
       clearErrors()
 
       const data = new FormData(form)
-      const why = String(data.get("why") || "").trim()
-      const email = String(data.get("email") || "").trim()
+      const val = (k) => String(data.get(k) || "").trim()
+      const email = val("email")
+      const workUrl = val("workUrl")
       const local = {}
-      if (!why) local["11"] = "Please tell us why you want to work at Design 1st."
-      if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) local["1"] = "That doesn't look like an email address."
+      if (!val("firstName")) local["9.3"] = "Please enter your first name."
+      if (!val("lastName")) local["9.6"] = "Please enter your last name."
+      if (!email) local["1"] = "Please enter your email address."
+      else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) local["1"] = "That doesn't look like an email address."
+      if (!val("phone")) local["8"] = "Please enter your phone number."
+      if (discipline.value === "Other" && !val("disciplineOther")) local.disciplineOther = "Please tell us your discipline."
+      if (!files.length) local["3"] = "Please attach your résumé or portfolio."
+      if (!workUrl) local.workUrl = "Please add a link to your work."
+      else if (!/^https?:\/\/\S+\.\S+/i.test(workUrl)) local.workUrl = "Please enter a full link, starting with https://"
+      if (!val("why")) local["11"] = "Please tell us why you want to work at Design 1st."
       if (Object.keys(local).length) {
         Object.entries(local).forEach(([id, msg]) => flag(id, msg))
         say("error", "Please check the highlighted fields.")
-        block(Object.keys(local)[0])?.querySelector("input, textarea")?.focus()
+        focusFirst()
         return
       }
       if (files.some((f) => f.state === "error")) {
@@ -372,8 +414,10 @@ const MAX_MB = Math.round(UPLOAD_RULES.maxBytes / 1024 / 1024)
             lastName: data.get("lastName"),
             email,
             phone: data.get("phone"),
-            why,
-            disciplines: data.getAll("disciplines"),
+            discipline: discipline.value,
+            disciplineOther: data.get("disciplineOther"),
+            workUrl,
+            why: val("why"),
             files: files.map((f) => ({ temp_filename: f.temp_filename, uploaded_filename: f.uploaded_filename })),
             uniqueId,
             honeypot: data.get("honeypot"),
@@ -390,7 +434,7 @@ const MAX_MB = Math.round(UPLOAD_RULES.maxBytes / 1024 / 1024)
         }
         if (out.fieldErrors) {
           Object.entries(out.fieldErrors).forEach(([id, msg]) => flag(id, msg))
-          block(Object.keys(out.fieldErrors)[0])?.querySelector("input, textarea")?.focus()
+          focusFirst()
         }
         say("error", out.message)
       } catch {

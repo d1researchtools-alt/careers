@@ -1,6 +1,7 @@
 ---
-// /careers — the page. Rebuilt from the Elementor original, section for
-// section: hero, "How to Apply", the form, the photo grid.
+// /careers — the page. Hero, stats, who we are, open positions, the
+// application form, the photo grid. Layout and copy follow the designer
+// handoff of 2026-09-24; the gallery is the Elementor original's.
 //
 // This file COMPOSES. Every colour, size and space lives in
 // src/styles/careers.css; if something here looks like it needs a hex, a
@@ -22,6 +23,47 @@ const DESCRIPTION =
 // route, so WordPress keeps serving it), and JPEG is the safe format for link
 // previews where WebP still is not.
 const OG_IMAGE = `${SITE_ORIGIN}/wp-content/uploads/2023/02/design1st-team-with-waterot.jpg`
+
+// The company video fills the hero's media slot. youtube-nocookie keeps the
+// embed from setting cookies until someone presses play.
+const VIDEO_ID = "TXJmzmvk98Q"
+
+const STATS = [
+  { n: "30", label: "Years in business" },
+  { n: "1,200+", label: "Products developed" },
+  { n: "130+", label: "Client patents secured" },
+  { n: "16", label: "Market segments" },
+]
+
+// Open roles. Empty the array and the section shows the "no open positions"
+// message instead. `discipline` must be one of ApplyForm's DISCIPLINES: the
+// role's Apply button pre-selects it in the form.
+const ROLES: {
+  title: string
+  meta: string
+  discipline: string
+  summary: string
+  requirements: string[]
+  niceToHave: string[]
+}[] = [
+  {
+    title: "Senior Mechanical Product Design Engineer",
+    meta: "Ottawa · Full time · On site",
+    discipline: "Mechanical engineering",
+    summary:
+      "Lead mechanical design from concept to manufacturing, working with clients and our industrial design, electronics and software teams.",
+    requirements: [
+      "7+ years in physical product design",
+      "Mechanical engineering degree",
+      "5+ years in SolidWorks",
+      "Based in or relocating to Ottawa",
+    ],
+    niceToHave: [
+      "Experience with volume manufacturing processes",
+      "An understanding of how design creates value for end users",
+    ],
+  },
+]
 
 const img = (name: string, w: number) => withBase(`/static/images/careers/${name}-${w}.webp`)
 
@@ -57,52 +99,118 @@ const GALLERY = [
             </span>
           </div>
 
-          <h1>Want to Work With Us?</h1>
+          <h1>Design 1st Careers</h1>
           <p class="cr-hero__lede">
-            Work alongside the industry’s most innovative minds on high-impact projects that bring creative solutions
-            to new products.
+            We’re always looking for creative people who want to take hardware from first sketch to production.
           </p>
-          <a class="cr-cta" href="#how-to-apply">Submit Your Application</a>
+          <a class="cr-btn cr-btn--hero" href="#openings">See Open Positions</a>
         </div>
 
+        <div class="cr-video">
+          <iframe
+            src={`https://www.youtube-nocookie.com/embed/${VIDEO_ID}?rel=0`}
+            title="Design 1st: product design and engineering"
+            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerpolicy="strict-origin-when-cross-origin"
+            allowfullscreen></iframe>
+        </div>
+      </div>
+    </section>
+
+    <section class="cr-stats" aria-label="Design 1st at a glance">
+      <div class="cr-wrap cr-stats__grid">
         {
-          /* The page's LCP image: eager, high priority, and sized so the frame
-             is reserved before the bytes land. 583x396 is the live frame at
-             1440; the 3:2 crop is what the 1050/600 rungs are cut to. */
+          STATS.map((s) => (
+            <div class="cr-stat">
+              <div class="cr-stat__n">{s.n}</div>
+              <div class="cr-stat__l">{s.label}</div>
+            </div>
+          ))
         }
-        <img
-          class="cr-hero__photo"
-          src={img("hero-team", 600)}
-          srcset={`${img("hero-team", 1050)} 1050w, ${img("hero-team", 600)} 600w`}
-          sizes="(min-width: 900px) 583px, 100vw"
-          width="583"
-          height="396"
-          alt="The Design 1st team waving outside the office"
-          fetchpriority="high"
-          decoding="async"
-        />
       </div>
     </section>
 
-    <section class="cr-how" id="how-to-apply">
-      <div class="cr-wrap cr-how__inner">
-        <h2>How to Apply</h2>
-        <p>
-          We hire talented and passionate professionals providing a supportive work environment that our employees
-          enhance, and our clients love. Our integrated team manages every step of our client’s product development
-          process, from concept through to electronics design, manufacturing setup, and production support.
-        </p>
-        <p>
-          If you’re an experienced product designer, engineer, embedded systems expert or simply passionate about
-          physical product design please get in touch. We will post open positions when available but if none show
-          you can still submit your job application request using the form below.
-        </p>
-        <p>We keep all job requests on file and review applications frequently.</p>
+    <section class="cr-section cr-band">
+      <div class="cr-wrap cr-about">
+        <div>
+          <h2 class="cr-h3">Who We Are</h2>
+          <p>
+            Design 1st is a product design and engineering firm in Ottawa. Industrial design, mechanical and electronics
+            engineering, embedded software, prototyping and manufacturing support all work under one roof, so the people
+            who design a product stay with it all the way to production.
+          </p>
+        </div>
+        <div>
+          <h2 class="cr-h3">Who We’re Looking For</h2>
+          <p>
+            People who enjoy hard problems and want to own them. You’ll work on several products across different
+            industries, side by side with the other disciplines, and you’ll see the parts you design built, tested and
+            manufactured.
+          </p>
+        </div>
       </div>
     </section>
 
-    <section class="cr-apply" id="apply">
+    <section class="cr-section" id="openings">
       <div class="cr-wrap">
+        <div class="cr-head"><h2>Open Positions</h2></div>
+
+        {
+          ROLES.length ? (
+            <div class="cr-roles">
+              {ROLES.map((r) => (
+                <article class="cr-role">
+                  <header class="cr-role__head">
+                    <div>
+                      <h3 class="cr-role__title">{r.title}</h3>
+                      <p class="cr-role__meta">{r.meta}</p>
+                    </div>
+                    <a class="cr-btn" href="#apply" data-discipline={r.discipline}>
+                      Apply Today
+                    </a>
+                  </header>
+                  <p class="cr-role__summary">{r.summary}</p>
+                  <div class="cr-role__cols">
+                    <div>
+                      <h4 class="cr-role__sub">Requirements</h4>
+                      <ul class="cr-role__reqs">
+                        {r.requirements.map((x) => (
+                          <li>{x}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 class="cr-role__sub">Nice to have</h4>
+                      <ul class="cr-role__reqs cr-role__reqs--plus">
+                        {r.niceToHave.map((x) => (
+                          <li>{x}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div class="cr-empty">
+              <p>No open positions right now. You can still send us your work below.</p>
+            </div>
+          )
+        }
+      </div>
+    </section>
+
+    <section class="cr-section cr-band" id="apply">
+      <div class="cr-wrap">
+        <div class="cr-head">
+          <h2>Apply Today</h2>
+          <p>
+            We hire talented, passionate professionals into a supportive workplace that our team makes better and our
+            clients love. Our integrated team manages every step of our client’s product development process, from
+            concept through to electronics design, manufacturing setup, and production support.
+          </p>
+          <p>We keep all job requests on file and review applications frequently. All fields are required.</p>
+        </div>
         <ApplyForm />
       </div>
     </section>
