@@ -5,7 +5,7 @@ compatibility_date = "2025-01-01"
 # The Vercel PRODUCTION URL of the Astro app, no trailing slash.
 # Get it after `vercel --prod` (looks like https://design1st-careers.vercel.app).
 [vars]
-VERCEL_ORIGIN = "https://REPLACE-ME.vercel.app"
+VERCEL_ORIGIN = "https://careers-ten-nu.vercel.app"
 
 # Run ONLY for /careers* — every other path on the zone keeps going to WordPress.
 # If your primary hostname is www, add a second identical block for www.design1st.com/careers*.
