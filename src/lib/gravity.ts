@@ -14,16 +14,16 @@
 // its upload endpoint is guarded by a WordPress nonce that rotates every 12
 // hours (valid for 24). A vendored copy would be dead within a day.
 //
-// Fetching design1st.com/careers/ from the server would normally loop straight
-// back into this app — that path IS our Cloudflare Worker route. The Worker
-// hands any request carrying X-D1-Upstream: wordpress to the origin instead;
-// see worker/worker.js.
+// The WordPress page now lives at /career/ (slug "career"), outside the
+// Worker's /careers* route, so fetching it goes straight to WordPress. The
+// X-D1-Upstream header is kept anyway: harmless there, and it still gets past
+// the Worker if the page ever moves back under /careers.
 
 export const FORM_ID = "2"
 export const FILE_FIELD_ID = "3"
 
 /** The WordPress page that renders form #2 — token source and submit target. */
-export const WP_PAGE = "https://design1st.com/careers/"
+export const WP_PAGE = "https://design1st.com/career/"
 
 /** What the Worker looks for to route a request past this app to WordPress. */
 export const UPSTREAM_HEADERS = {
