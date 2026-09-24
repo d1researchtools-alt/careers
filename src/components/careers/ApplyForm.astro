@@ -195,7 +195,7 @@ const TYPES_TEXT = `${TYPES.slice(0, -1).join(", ")} or ${TYPES.at(-1)}`
     }
 
     // ---- files ---------------------------------------------------------------
-    /** @type {{file: File, li: HTMLElement, state: "uploading"|"done"|"error", pct: number, xhr?: XMLHttpRequest, temp_filename?: string, uploaded_filename?: string, promise: Promise<void>}[]} */
+    /** @type {{file: File, li: HTMLElement, state: "uploading"|"done"|"error", pct: number, xhr?: XMLHttpRequest, temp_filename?: string, uploaded_filename?: string, hash?: string, promise: Promise<void>}[]} */
     const files = []
 
     const render = (entry) => {
@@ -244,6 +244,9 @@ const TYPES_TEXT = `${TYPES.slice(0, -1).join(", ")} or ${TYPES.at(-1)}`
         }
         const body = new FormData()
         body.append("name", entry.file.name)
+        // Required by current Gravity Forms: without it the upload is refused
+        // with "Invalid request."
+        body.append("original_filename", entry.file.name)
         body.append("form_id", cfg.formId)
         body.append("field_id", cfg.fieldId)
         body.append("gform_unique_id", uniqueId)
@@ -274,6 +277,7 @@ const TYPES_TEXT = `${TYPES.slice(0, -1).join(", ")} or ${TYPES.at(-1)}`
             entry.state = "done"
             entry.temp_filename = out.data.temp_filename
             entry.uploaded_filename = out.data.uploaded_filename || entry.file.name
+            entry.hash = out.data.hash
           } else {
             entry.state = "error"
             entry.error = out?.error?.message || `Upload failed (${xhr.status})`
@@ -418,7 +422,11 @@ const TYPES_TEXT = `${TYPES.slice(0, -1).join(", ")} or ${TYPES.at(-1)}`
             disciplineOther: data.get("disciplineOther"),
             workUrl,
             why: val("why"),
-            files: files.map((f) => ({ temp_filename: f.temp_filename, uploaded_filename: f.uploaded_filename })),
+            files: files.map((f) => ({
+              temp_filename: f.temp_filename,
+              uploaded_filename: f.uploaded_filename,
+              hash: f.hash,
+            })),
             uniqueId,
             honeypot: data.get("honeypot"),
           }),

@@ -72,6 +72,8 @@ const DISCIPLINE_MAP: Record<string, string> = {
 interface UploadedFile {
   temp_filename: string
   uploaded_filename: string
+  /** Gravity Forms' integrity hash for the temp file, when it sends one. */
+  hash?: string
 }
 
 interface Payload {
@@ -96,6 +98,7 @@ const UNIQUE_ID = /^[a-z0-9]{8,40}$/i
 // A temp filename is "<uniqueId>_input_<field>_<random>.<ext>". Anything with
 // a path separator in it is not one, whatever else it is.
 const TEMP_NAME = /^[A-Za-z0-9_.-]{1,255}$/
+const HASH = /^[a-f0-9]{64}$/i
 
 export const POST: APIRoute = async ({ request }) => {
   let payload: Payload
@@ -149,7 +152,8 @@ export const POST: APIRoute = async ({ request }) => {
       typeof f.temp_filename !== "string" ||
       typeof f.uploaded_filename !== "string" ||
       !TEMP_NAME.test(f.temp_filename) ||
-      f.uploaded_filename.length > 255
+      f.uploaded_filename.length > 255 ||
+      (f.hash !== undefined && (typeof f.hash !== "string" || !HASH.test(f.hash)))
     ) {
       return json({ ok: false, message: "One of the attached files could not be read. Please re-attach it." }, 400)
     }
@@ -198,6 +202,7 @@ export const POST: APIRoute = async ({ request }) => {
           [`input_${FILE_FIELD_ID}`]: files.map((f) => ({
             temp_filename: f.temp_filename,
             uploaded_filename: f.uploaded_filename,
+            ...(f.hash ? { hash: f.hash } : {}),
           })),
         })
       : "",
