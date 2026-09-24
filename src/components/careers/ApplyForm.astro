@@ -268,19 +268,32 @@ const TYPES_TEXT = `${TYPES.slice(0, -1).join(", ")} or ${TYPES.at(-1)}`
           resolve()
         }
         xhr.onabort = () => resolve()
-        xhr.onload = () => {
+        xhr.onload = async () => {
           let out = null
+          let status = xhr.status
           try {
             out = JSON.parse(xhr.responseText)
           } catch {}
-          if (xhr.status === 200 && out && out.status === "ok" && out.data?.temp_filename) {
+          // The nonce was minted for a logged-out visitor. A browser that is
+          // logged into WordPress (staff testing the form) sends its login
+          // cookie with a same-origin XHR, WordPress checks the nonce against
+          // that user instead, and answers 403 "Your session has expired".
+          // XHR cannot leave cookies out; fetch can. One retry without them.
+          if (DIRECT && status === 403) {
+            try {
+              const res = await fetch(cfg.uploadUrl, { method: "POST", body, credentials: "omit" })
+              status = res.status
+              out = await res.json()
+            } catch {}
+          }
+          if (status === 200 && out && out.status === "ok" && out.data?.temp_filename) {
             entry.state = "done"
             entry.temp_filename = out.data.temp_filename
             entry.uploaded_filename = out.data.uploaded_filename || entry.file.name
             entry.hash = out.data.hash
           } else {
             entry.state = "error"
-            entry.error = out?.error?.message || `Upload failed (${xhr.status})`
+            entry.error = out?.error?.message || `Upload failed (${status})`
           }
           render(entry)
           resolve()
