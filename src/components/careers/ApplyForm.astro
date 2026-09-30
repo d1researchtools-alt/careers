@@ -41,47 +41,47 @@ const TYPES_TEXT = `${TYPES.slice(0, -1).join(", ")} or ${TYPES.at(-1)}`
 ---
 
 {
-  /* Every field is required. Errors are keyed by data-gf: Gravity Forms field
+  /* Every field but the work link is required. Errors are keyed by data-gf: Gravity Forms field
      ids where the field exists on form #2, a name where it does not (the
      discipline detail and the work link travel inside field 11). */
 }
 <form class="cr-form" data-apply-form novalidate aria-label="Job application">
   <div class="cr-form__row">
     <div class="cr-field" data-gf="9.3">
-      <label for="cr-first">First Name</label>
+      <label for="cr-first">First Name <span class="cr-req" aria-hidden="true">*</span></label>
       <input id="cr-first" name="firstName" autocomplete="given-name" required />
     </div>
     <div class="cr-field" data-gf="9.6">
-      <label for="cr-last">Last Name</label>
+      <label for="cr-last">Last Name <span class="cr-req" aria-hidden="true">*</span></label>
       <input id="cr-last" name="lastName" autocomplete="family-name" required />
     </div>
   </div>
 
   <div class="cr-form__row">
     <div class="cr-field" data-gf="1">
-      <label for="cr-email">Email</label>
+      <label for="cr-email">Email <span class="cr-req" aria-hidden="true">*</span></label>
       <input id="cr-email" name="email" type="email" autocomplete="email" inputmode="email" required />
     </div>
     <div class="cr-field" data-gf="8">
-      <label for="cr-phone">Phone</label>
+      <label for="cr-phone">Phone <span class="cr-req" aria-hidden="true">*</span></label>
       <input id="cr-phone" name="phone" type="tel" autocomplete="tel" required />
     </div>
   </div>
 
   <div class="cr-field" data-gf="10">
-    <label for="cr-discipline">Discipline</label>
+    <label for="cr-discipline">Discipline <span class="cr-req" aria-hidden="true">*</span></label>
     <select id="cr-discipline" name="discipline" required>
       {DISCIPLINES.map((d, i) => <option value={d} selected={i === 0}>{d}</option>)}
     </select>
   </div>
 
   <div class="cr-field" data-gf="disciplineOther" data-other hidden>
-    <label for="cr-discipline-other">Your Discipline</label>
+    <label for="cr-discipline-other">Your Discipline <span class="cr-req" aria-hidden="true">*</span></label>
     <input id="cr-discipline-other" name="disciplineOther" required disabled />
   </div>
 
   <div class="cr-field" data-gf="3">
-    <span class="cr-label" id="cr-files-label">Résumé or Portfolio</span>
+    <span class="cr-label" id="cr-files-label">Resume or Portfolio <span class="cr-req" aria-hidden="true">*</span></span>
     <div class="cr-upload" data-drop>
       <input
         type="file"
@@ -90,6 +90,7 @@ const TYPES_TEXT = `${TYPES.slice(0, -1).join(", ")} or ${TYPES.at(-1)}`
         accept={ACCEPT}
         multiple
         aria-labelledby="cr-files-label"
+        aria-required="true"
         aria-describedby="cr-files-rules"
       />
       <label for="cr-files" class="cr-upload__btn">Choose Files</label>
@@ -103,11 +104,11 @@ const TYPES_TEXT = `${TYPES.slice(0, -1).join(", ")} or ${TYPES.at(-1)}`
 
   <div class="cr-field" data-gf="workUrl">
     <label for="cr-work">Link to Your Work</label>
-    <input id="cr-work" name="workUrl" type="url" placeholder="https://" inputmode="url" required />
+    <input id="cr-work" name="workUrl" type="url" placeholder="https://" inputmode="url" />
   </div>
 
   <div class="cr-field" data-gf="11">
-    <label for="cr-why">Why do you want to work at Design 1st?</label>
+    <label for="cr-why">Why do you want to work at Design 1st? <span class="cr-req" aria-hidden="true">*</span></label>
     <textarea id="cr-why" name="why" rows="5" required></textarea>
   </div>
 
@@ -393,9 +394,8 @@ const TYPES_TEXT = `${TYPES.slice(0, -1).join(", ")} or ${TYPES.at(-1)}`
       else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) local["1"] = "That doesn't look like an email address."
       if (!val("phone")) local["8"] = "Please enter your phone number."
       if (discipline.value === "Other" && !val("disciplineOther")) local.disciplineOther = "Please tell us your discipline."
-      if (!files.length) local["3"] = "Please attach your résumé or portfolio."
-      if (!workUrl) local.workUrl = "Please add a link to your work."
-      else if (!/^https?:\/\/\S+\.\S+/i.test(workUrl)) local.workUrl = "Please enter a full link, starting with https://"
+      if (!files.length) local["3"] = "Please attach your resume or portfolio."
+      if (workUrl && !/^https?:\/\/\S+\.\S+/i.test(workUrl)) local.workUrl = "Please enter a full link, starting with https://"
       if (!val("why")) local["11"] = "Please tell us why you want to work at Design 1st."
       if (Object.keys(local).length) {
         Object.entries(local).forEach(([id, msg]) => flag(id, msg))

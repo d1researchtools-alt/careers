@@ -125,7 +125,7 @@ export const POST: APIRoute = async ({ request }) => {
   // nothing it can act on.
   if (str(payload.honeypot)) return json({ ok: true, message: MESSAGES.success })
 
-  // Every field on the page is required. Form #2 itself only requires field
+  // Every field on the page but the work link is required. Form #2 itself only requires field
   // 11, so these checks are the page's rules, enforced here too. Keys match
   // the form's data-gf attributes.
   const required = "This field is required."
@@ -137,9 +137,8 @@ export const POST: APIRoute = async ({ request }) => {
   if (!phone) fieldErrors["8"] = required
   if (!(discipline in DISCIPLINE_MAP)) fieldErrors["10"] = required
   else if (discipline === "Other" && !disciplineOther) fieldErrors.disciplineOther = required
-  if (!files.length) fieldErrors["3"] = "Please attach your résumé or portfolio."
-  if (!workUrl) fieldErrors.workUrl = required
-  else if (!URL_LIKE.test(workUrl)) fieldErrors.workUrl = "Please enter a full link, starting with https://"
+  if (!files.length) fieldErrors["3"] = "Please attach your resume or portfolio."
+  if (workUrl && !URL_LIKE.test(workUrl)) fieldErrors.workUrl = "Please enter a full link, starting with https://"
   if (!why) fieldErrors["11"] = required
   if (Object.keys(fieldErrors).length) return json({ ok: false, message: MESSAGES.invalid, fieldErrors }, 400)
 
@@ -181,8 +180,10 @@ export const POST: APIRoute = async ({ request }) => {
   const gfDiscipline = DISCIPLINE_MAP[discipline]
   const details = [
     `Discipline: ${discipline === "Other" ? `Other: ${disciplineOther}` : discipline}`,
-    `Link to work: ${workUrl}`,
-  ].join("\n")
+    workUrl && `Link to work: ${workUrl}`,
+  ]
+    .filter(Boolean)
+    .join("\n")
   set("input_9.3", firstName)
   set("input_9.6", lastName)
   set("input_1", email)

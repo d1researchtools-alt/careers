@@ -428,6 +428,11 @@
   font-weight: 600;
   color: var(--c-ink);
 }
+/* Visual only (aria-hidden): the inputs carry `required`, which is what
+   assistive tech announces. */
+.cr-req {
+  color: #b00020;
+}
 .cr p.cr-hint {
   margin-top: var(--sp-2);
   font-size: var(--t-small);
