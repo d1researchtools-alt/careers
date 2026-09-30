@@ -21,6 +21,8 @@
 
 export const FORM_ID = "2"
 export const FILE_FIELD_ID = "3"
+/** "Link to Your Work", a Website field added to form #2 on 2026-09-30. */
+export const WEBSITE_FIELD_ID = "21"
 
 /** The WordPress page that renders form #2 — token source and submit target. */
 export const WP_PAGE = "https://design1st.com/career/"
@@ -57,6 +59,12 @@ export interface GravityTokens {
   uploadUrl: string
   /** `_gform_file_upload_nonce_2_3`. 12-hour rotation, 24-hour validity. */
   uploadNonce: string
+  /**
+   * `gf_global.version_hash`. Gravity Forms' own script adds it to every
+   * submission; without it the honeypot check fails and the entry is filed
+   * as spam. Empty if the page stops rendering it.
+   */
+  versionHash: string
   fetchedAt: number
 }
 
@@ -137,11 +145,16 @@ export function parseTokens(html: string): Omit<GravityTokens, "fetchedAt"> {
   const uploadNonce = settings.multipart_params?.[`_gform_file_upload_nonce_${FORM_ID}_${FILE_FIELD_ID}`]
   if (!uploadUrl || typeof uploadNonce !== "string") throw new Error("uploader settings missing url or nonce")
 
+  // Not inside the form: it is in the page-wide gf_global script block.
+  const versionHash = html.match(/"version_hash"\s*:\s*"([a-f0-9]+)"/i)?.[1] ?? ""
+  if (!versionHash) console.warn("[gravity] version_hash not found; submissions will be marked as spam")
+
   return {
     state: hidden(`state_${FORM_ID}`),
     currency: hidden("gform_currency"),
     uploadUrl,
     uploadNonce,
+    versionHash,
   }
 }
 

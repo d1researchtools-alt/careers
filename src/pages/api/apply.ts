@@ -2,6 +2,7 @@ import type { APIRoute } from "astro"
 import {
   FORM_ID,
   FILE_FIELD_ID,
+  WEBSITE_FIELD_ID,
   WP_PAGE,
   UPSTREAM_HEADERS,
   UPLOAD_RULES,
@@ -54,20 +55,26 @@ export const GET: APIRoute = async ({ url }) => {
 }
 
 /** Gravity Forms' choice values for field 10 — must match the form exactly. */
-const GF_DISCIPLINES = ["Industrial Designer", "Mechanical Engineer", "Electronics Engineer", "Embedded Systems", "Other"]
+const GF_DISCIPLINES = [
+  "Industrial Designer",
+  "Mechanical Engineer",
+  "Electronics Engineer",
+  "Embedded Systems",
+  "Manufacturing",
+  "Other",
+]
 
 /**
  * The page's Discipline select → the field 10 checkbox it ticks. Form #2 has
- * no Manufacturing choice, so it lands on Other; the exact choice (and the
- * "Your Discipline" text) is written into field 11 as well, so hiring always
- * sees what the applicant picked.
+ * no field for the "Your Discipline" text, so an Other applicant's answer is
+ * written at the top of field 11.
  */
 const DISCIPLINE_MAP: Record<string, string> = {
   "Mechanical engineering": "Mechanical Engineer",
   "Industrial design": "Industrial Designer",
   "Electronics engineering": "Electronics Engineer",
   "Embedded software": "Embedded Systems",
-  Manufacturing: "Other",
+  Manufacturing: "Manufacturing",
   Other: "Other",
 }
 
@@ -92,6 +99,8 @@ interface Payload {
   /** The alnum id the browser used for its uploads; the submit must match. */
   uniqueId?: string
   honeypot?: string
+  /** Milliseconds the applicant spent on the page, for gform_submission_speeds. */
+  elapsedMs?: number
 }
 
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
@@ -122,9 +131,10 @@ export const POST: APIRoute = async ({ request }) => {
   const workUrl = str(payload.workUrl, 2000)
   const files = Array.isArray(payload.files) ? payload.files : []
 
-  // Honeypot: form #2's decoy is input_20 ("X/Twitter"). Gravity Forms discards
-  // anything that fills it; we answer as if it worked, which tells a bot
-  // nothing it can act on.
+  // Honeypot: the page's own decoy field. Filling it gets the same answer as
+  // success, which tells a bot nothing it can act on. (Form #2's honeypot is
+  // separate: its id is one past the highest field id, so it moves whenever a
+  // field is added. We never send it, which is what an empty one looks like.)
   if (str(payload.honeypot)) return json({ ok: true, message: MESSAGES.success })
 
   // Every field on the page but the work link is required. Form #2 itself only requires field
@@ -140,7 +150,7 @@ export const POST: APIRoute = async ({ request }) => {
   if (!(discipline in DISCIPLINE_MAP)) fieldErrors["10"] = required
   else if (discipline === "Other" && !disciplineOther) fieldErrors.disciplineOther = required
   if (!files.length) fieldErrors["3"] = "Please attach your resume or portfolio."
-  if (workUrl && !URL_LIKE.test(workUrl)) fieldErrors.workUrl = "Please enter a full link, starting with https://"
+  if (workUrl && !URL_LIKE.test(workUrl)) fieldErrors["21"] = "Please enter a full link, starting with https://"
   if (!why) fieldErrors["11"] = required
   if (Object.keys(fieldErrors).length) return json({ ok: false, message: MESSAGES.invalid, fieldErrors }, 400)
 
@@ -175,23 +185,16 @@ export const POST: APIRoute = async ({ request }) => {
   const set = (k: string, v: string) => body.set(k, v)
 
   // Field ids from the live form: 9 name, 1 email, 8 phone, 11 why, 10
-  // discipline checkboxes, 3 files, 20 honeypot. 12–19 are hidden tracking
-  // fields that the WordPress page leaves empty; omitting them is the same.
-  // Form #2 has no fields for the exact discipline or the work link, so they
-  // head field 11 where the entry and the notification email both show them.
+  // discipline checkboxes, 21 link to work, 3 files. 12–19 are hidden
+  // tracking fields that the WordPress page leaves empty; omitting them is the
+  // same.
   const gfDiscipline = DISCIPLINE_MAP[discipline]
-  const details = [
-    `Discipline: ${discipline === "Other" ? `Other: ${disciplineOther}` : discipline}`,
-    workUrl && `Link to work: ${workUrl}`,
-  ]
-    .filter(Boolean)
-    .join("\n")
   set("input_9.3", firstName)
   set("input_9.6", lastName)
   set("input_1", email)
   set("input_8", phone)
-  set("input_11", `${details}\n\n${why}`)
-  set("input_20", "")
+  set("input_11", discipline === "Other" ? `Discipline: Other: ${disciplineOther}\n\n${why}` : why)
+  set(`input_${WEBSITE_FIELD_ID}`, workUrl)
   set(`input_10.${GF_DISCIPLINES.indexOf(gfDiscipline) + 1}`, gfDiscipline)
 
   // The files were already uploaded to Gravity Forms' temp directory by the
@@ -221,6 +224,13 @@ export const POST: APIRoute = async ({ request }) => {
   set("gform_target_page_number_" + FORM_ID, "0")
   set("gform_source_page_number_" + FORM_ID, "1")
   set("state_" + FORM_ID, tokens.state)
+  // What Gravity Forms' own script adds on submit. Without version_hash the
+  // honeypot check fails and the entry lands in Spam instead of Entries.
+  if (tokens.versionHash) set("version_hash", tokens.versionHash)
+  const elapsed = Math.round(Number(payload.elapsedMs))
+  if (Number.isFinite(elapsed) && elapsed > 0) {
+    set("gform_submission_speeds", JSON.stringify({ pages: { "1": [Math.min(elapsed, 86_400_000)] } }))
+  }
   set("gform_currency", tokens.currency)
 
   try {

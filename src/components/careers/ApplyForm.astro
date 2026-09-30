@@ -43,7 +43,7 @@ const TYPES_TEXT = `${TYPES.slice(0, -1).join(", ")} or ${TYPES.at(-1)}`
 {
   /* Every field but the work link is required. Errors are keyed by data-gf: Gravity Forms field
      ids where the field exists on form #2, a name where it does not (the
-     discipline detail and the work link travel inside field 11). */
+     discipline detail travels inside field 11). */
 }
 <form class="cr-form" data-apply-form novalidate aria-label="Job application">
   <div class="cr-form__row">
@@ -102,7 +102,7 @@ const TYPES_TEXT = `${TYPES.slice(0, -1).join(", ")} or ${TYPES.at(-1)}`
     <ul class="cr-files__list" data-file-list role="list"></ul>
   </div>
 
-  <div class="cr-field" data-gf="workUrl">
+  <div class="cr-field" data-gf="21">
     <label for="cr-work">Link to Your Work</label>
     <input id="cr-work" name="workUrl" type="url" placeholder="https://" inputmode="url" />
   </div>
@@ -405,7 +405,7 @@ const TYPES_TEXT = `${TYPES.slice(0, -1).join(", ")} or ${TYPES.at(-1)}`
       if (!val("phone")) local["8"] = "Please enter your phone number."
       if (discipline.value === "Other" && !val("disciplineOther")) local.disciplineOther = "Please tell us your discipline."
       if (!files.length) local["3"] = "Please attach your resume or portfolio."
-      if (workUrl && !/^https?:\/\/\S+\.\S+/i.test(workUrl)) local.workUrl = "Please enter a full link, starting with https://"
+      if (workUrl && !/^https?:\/\/\S+\.\S+/i.test(workUrl)) local["21"] = "Please enter a full link, starting with https://"
       if (!val("why")) local["11"] = "Please tell us why you want to work at Design 1st."
       if (Object.keys(local).length) {
         Object.entries(local).forEach(([id, msg]) => flag(id, msg))
@@ -452,6 +452,7 @@ const TYPES_TEXT = `${TYPES.slice(0, -1).join(", ")} or ${TYPES.at(-1)}`
             })),
             uniqueId,
             honeypot: data.get("honeypot"),
+            elapsedMs: Math.round(performance.now()),
           }),
         })
         const out = await res.json()
