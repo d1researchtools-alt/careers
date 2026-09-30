@@ -7,6 +7,7 @@ import {
   UPLOAD_RULES,
   MESSAGES,
   getTokens,
+  refreshTokens,
   readSubmitResponse,
 } from "@/lib/gravity"
 
@@ -34,9 +35,10 @@ export const prerender = false
 // hit this app, and a postback to WordPress is a full page we would rather
 // parse once, on the server, into a JSON answer the form can show.
 
-export const GET: APIRoute = async () => {
+export const GET: APIRoute = async ({ url }) => {
   try {
-    const t = await getTokens()
+    // ?fresh=1: the browser's upload was refused with the nonce it was given.
+    const t = url.searchParams.has("fresh") ? await refreshTokens() : await getTokens()
     return json({
       ok: true,
       uploadUrl: t.uploadUrl,

@@ -79,9 +79,28 @@ export async function getTokens(force = false): Promise<GravityTokens> {
   return cached
 }
 
+/**
+ * A forced refresh that a caller outside our control (the browser, after an
+ * upload was refused) can trigger. Rate-limited so a client cannot turn it
+ * into a WordPress fetch per request.
+ */
+export async function refreshTokens(): Promise<GravityTokens> {
+  const fresh = cached && Date.now() - cached.fetchedAt < 30 * 1000
+  return getTokens(!fresh)
+}
+
 async function fetchTokens(): Promise<GravityTokens> {
-  const res = await fetch(WP_PAGE, { headers: UPSTREAM_HEADERS })
-  if (!res.ok) throw new Error(`WordPress answered ${res.status} for ${WP_PAGE}`)
+  // Bust every cache between here and WordPress. Without this the page came
+  // back from a cache (WP Engine / Cloudflare) holding a nonce older than its
+  // 24-hour life, while visitors were served a fresh one, and every upload
+  // failed with "Your session has expired".
+  const url = new URL(WP_PAGE)
+  url.searchParams.set("gf_tokens", String(Date.now()))
+  const res = await fetch(url, {
+    headers: { ...UPSTREAM_HEADERS, "Cache-Control": "no-cache", Pragma: "no-cache" },
+    cache: "no-store",
+  })
+  if (!res.ok) throw new Error(`WordPress answered ${res.status} for ${url}`)
   const html = await res.text()
   const tokens = parseTokens(html)
   return { ...tokens, fetchedAt: Date.now() }

@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro"
-import { UPSTREAM_HEADERS, UPLOAD_RULES, getTokens } from "@/lib/gravity"
+import { UPSTREAM_HEADERS, UPLOAD_RULES, getTokens, refreshTokens } from "@/lib/gravity"
 
 export const prerender = false
 
@@ -38,10 +38,17 @@ export const POST: APIRoute = async ({ request }) => {
     return json({ status: "error", error: { message: "Could not reach the upload service." } }, 502)
   }
 
-  form.set(`_gform_file_upload_nonce_${form.get("form_id")}_${form.get("field_id")}`, tokens.uploadNonce)
+  const nonceKey = `_gform_file_upload_nonce_${form.get("form_id")}_${form.get("field_id")}`
+  const send = (t: typeof tokens) => {
+    form.set(nonceKey, t.uploadNonce)
+    return fetch(t.uploadUrl, { method: "POST", body: form, headers: UPSTREAM_HEADERS })
+  }
 
   try {
-    const res = await fetch(tokens.uploadUrl, { method: "POST", body: form, headers: UPSTREAM_HEADERS })
+    let res = await send(tokens)
+    // A refused nonce ("Your session has expired") means the cached tokens are
+    // stale. Refresh once and try again.
+    if (res.status === 403) res = await send(await refreshTokens())
     const text = await res.text()
     return new Response(text, {
       status: res.status,

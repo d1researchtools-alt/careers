@@ -186,9 +186,9 @@ const TYPES_TEXT = `${TYPES.slice(0, -1).join(", ")} or ${TYPES.at(-1)}`
     // Fetched once, the first time a file is added. It carries a nonce that is
     // good for 24 hours, so a form left open overnight can still upload.
     let config = null
-    const getConfig = async () => {
-      if (config) return config
-      const res = await fetch(`${API}/apply`, { cache: "no-store" })
+    const getConfig = async (fresh = false) => {
+      if (config && !fresh) return config
+      const res = await fetch(`${API}/apply${fresh ? "?fresh=1" : ""}`, { cache: "no-store" })
       const out = await res.json()
       if (!out.ok) throw new Error(out.message || "Upload is unavailable right now.")
       config = out
@@ -280,11 +280,21 @@ const TYPES_TEXT = `${TYPES.slice(0, -1).join(", ")} or ${TYPES.at(-1)}`
           // cookie with a same-origin XHR, WordPress checks the nonce against
           // that user instead, and answers 403 "Your session has expired".
           // XHR cannot leave cookies out; fetch can. One retry without them.
-          if (DIRECT && status === 403) {
+          const retry = async () => {
             try {
               const res = await fetch(cfg.uploadUrl, { method: "POST", body, credentials: "omit" })
               status = res.status
               out = await res.json()
+            } catch {}
+          }
+          if (DIRECT && status === 403) await retry()
+          // Still refused: the nonce itself is stale. Ask for a freshly
+          // fetched one and try once more.
+          if (DIRECT && status === 403) {
+            try {
+              cfg = await getConfig(true)
+              body.set(`_gform_file_upload_nonce_${cfg.formId}_${cfg.fieldId}`, cfg.nonce)
+              await retry()
             } catch {}
           }
           if (status === 200 && out && out.status === "ok" && out.data?.temp_filename) {
